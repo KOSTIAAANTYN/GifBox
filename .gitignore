@@ -1,15 +1,41 @@
+# Android Studio files
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
+build/
 local.properties
+.idea/
+*.hprof
+
+# Log files
+*.log
+
+# Android specific
+*.apk
+*.ap_
+*.dex
+*.class
+*.jar
+*.keystore
+*.jks
+
+# Generated files
+captures/
+output.json
+
+# Miscellaneous
+.DS_Store
+*.swp
+*.tmp
+*.bak
+*.orig
+*.out
+*.o
+*.so
+*.dll
+*.exe
+*.app
+*.ipa
+*.pdb
+*.idb
+*.sublime-workspace
+*.sublime-project

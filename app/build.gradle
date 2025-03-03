@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'com.example.GifBox'
-    compileSdk 35
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.GifBox"
-        minSdk 24
+        minSdk 28
         targetSdk 35
         versionCode 1
         versionName "1.0"
