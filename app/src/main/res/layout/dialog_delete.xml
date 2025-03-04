@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/purple_200">
+
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ви впевнені, що хочете видалити цей файл?"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/buttonCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Скасувати"
+            android:background="?android:attr/selectableItemBackground"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/buttonDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Видалити"
+            android:background="?android:attr/selectableItemBackground"
+            android:textColor="#FF0000"/>
+    </LinearLayout>
+</LinearLayout> 
