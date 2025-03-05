@@ -3,9 +3,13 @@ package com.example.GifBox;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,20 +27,100 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.GifBox.R;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private Context context;
     private List<File> mediaList;
+    private RecyclerView recyclerView;
+    private Handler scrollHandler;
+    private Runnable scrollRunnable;
+    private static final long SCROLL_DELAY = 150; // Затримка для оптимізації прокрутки
 
     public GifAdapter(Context context, List<File> mediaList) {
         this.context = context;
         this.mediaList = mediaList;
+        this.scrollHandler = new Handler(Looper.getMainLooper());
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        this.recyclerView = recyclerView;
+        setupScrollListener();
+    }
+
+    private void setupScrollListener() {
+        scrollRunnable = this::checkVisibleItems;
+        
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                
+                scrollHandler.removeCallbacks(scrollRunnable);
+                
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    scrollHandler.postDelayed(scrollRunnable, SCROLL_DELAY);
+                }
+            }
+        });
+    }
+
+    private void checkVisibleItems() {
+        if (recyclerView == null) return;
+
+        int firstVisible = ((RecyclerView.LayoutManager) recyclerView.getLayoutManager()).getChildCount();
+        
+        for (int i = 0; i < firstVisible; i++) {
+            View view = recyclerView.getChildAt(i);
+            if (view != null) {
+                ViewHolder holder = (ViewHolder) recyclerView.getChildViewHolder(view);
+                int position = holder.getAdapterPosition();
+                
+                if (position != RecyclerView.NO_POSITION) {
+                    android.graphics.Rect rect = new android.graphics.Rect();
+                    boolean isPartiallyVisible = view.getGlobalVisibleRect(rect);
+                    
+                    if (isPartiallyVisible) {
+                        startMediaPlayback(holder, position);
+                    }
+                }
+            }
+        }
+    }
+
+    private void startMediaPlayback(ViewHolder holder, int position) {
+        File file = mediaList.get(position);
+        String extension = file.getName().substring(file.getName().lastIndexOf("."));
+        
+        if ((extension.equals(".mp4") || extension.equals(".webm")) && 
+            holder.videoView.getVisibility() == View.VISIBLE) {
+            if (!holder.videoView.isPlaying()) {
+                holder.videoView.start();
+            }
+        } else if (extension.equals(".gif") && 
+                   holder.imageView.getVisibility() == View.VISIBLE) {
+            if (holder.imageView.getDrawable() == null) {
+                RequestOptions options = new RequestOptions()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .override(500) // Обмежуємо розмір для оптимізації пам'яті
+                    .fitCenter();
+                
+                Glide.with(context)
+                    .asGif()
+                    .load(file)
+                    .apply(options)
+                    .into(holder.imageView);
+            }
+        }
     }
 
     @Override
@@ -55,20 +139,60 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             return true;
         });
 
+        holder.itemView.setOnClickListener(v -> {
+            if (extension.equalsIgnoreCase(".gif")) {
+                copyGifToClipboard(file);
+            } else {
+                Toast.makeText(context, "Only GIF files can be copied to clipboard", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         if (extension.equals(".mp4") || extension.equals(".webm")) {
             holder.videoView.setVisibility(View.VISIBLE);
             holder.imageView.setVisibility(View.GONE);
+            
+            // Попередньо встановлюємо розміри для VideoView
+            holder.videoView.getLayoutParams().height = 500;
             holder.videoView.setVideoPath(file.getAbsolutePath());
             holder.videoView.setOnPreparedListener(mp -> {
                 mp.setVolume(0f, 0f);
                 mp.setLooping(true);
             });
-            holder.videoView.start();
+            
+            View view = holder.itemView;
+            android.graphics.Rect rect = new android.graphics.Rect();
+            if (view.getGlobalVisibleRect(rect)) {
+                holder.videoView.start();
+            }
         } else {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.videoView.setVisibility(View.GONE);
-            Glide.with(context).asGif().load(file).into(holder.imageView);
+            
+            View view = holder.itemView;
+            android.graphics.Rect rect = new android.graphics.Rect();
+            if (view.getGlobalVisibleRect(rect)) {
+                RequestOptions options = new RequestOptions()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .override(500)
+                    .fitCenter();
+                
+                Glide.with(context)
+                    .asGif()
+                    .load(file)
+                    .apply(options)
+                    .into(holder.imageView);
+            }
         }
+    }
+
+    @Override
+    public void onViewRecycled(ViewHolder holder) {
+        super.onViewRecycled(holder);
+        if (holder.videoView.isPlaying()) {
+            holder.videoView.stopPlayback();
+        }
+        Glide.with(context).clear(holder.imageView);
+        holder.imageView.setImageDrawable(null);
     }
 
     private void showGifDialog(File file) {
@@ -137,7 +261,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             
-            context.startActivity(Intent.createChooser(shareIntent, "Поділитися через"));
+            context.startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
 
         renameButton.setOnClickListener(v -> {
@@ -218,9 +342,9 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                     gifNameTextView.setText(newFile.getName());
                     renameDialog.dismiss();
                     parentDialog.dismiss();
-                    Toast.makeText(context, "Файл перейменовано", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "The file has been renamed", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(context, "Помилка при перейменуванні файлу", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Error renaming a file", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -266,12 +390,12 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 if (position != -1) {
                     mediaList.remove(position);
                     notifyItemRemoved(position);
-                    Toast.makeText(context, "Файл видалено", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "File deleted", Toast.LENGTH_SHORT).show();
                 }
                 confirmDialog.dismiss();
                 parentDialog.dismiss();
             } else {
-                Toast.makeText(context, "Помилка при видаленні файлу", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Error when deleting a file", Toast.LENGTH_SHORT).show();
             }
         });
         
@@ -279,6 +403,23 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             ViewGroup.LayoutParams.WRAP_CONTENT);
         confirmDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         confirmDialog.show();
+    }
+
+    private void copyGifToClipboard(File file) {
+        try {
+            Uri contentUri = FileProvider.getUriForFile(context,
+                context.getApplicationContext().getPackageName() + ".provider",
+                file);
+
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newUri(context.getContentResolver(), "GIF", contentUri);
+            clipboard.setPrimaryClip(clip);
+
+            Toast.makeText(context, "GIF copied to the clipboard", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(context, "Error copying a GIF", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -297,4 +438,5 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         }
     }
 }
+
 

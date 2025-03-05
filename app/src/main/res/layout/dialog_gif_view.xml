@@ -76,7 +76,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Надіслати GIF"
+                android:text="Send GIF"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:layout_marginStart="16dp"/>
@@ -101,7 +101,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Змінити ім'я"
+                android:text="Change the name"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:layout_marginStart="16dp"/>
@@ -126,7 +126,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Видалити"
+                android:text="Delete"
                 android:textColor="#FF0000"
                 android:textSize="16sp"
                 android:layout_marginStart="16dp"/>
