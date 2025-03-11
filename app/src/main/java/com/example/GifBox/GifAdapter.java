@@ -42,7 +42,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private RecyclerView recyclerView;
     private Handler scrollHandler;
     private Runnable scrollRunnable;
-    private static final long SCROLL_DELAY = 150; // Затримка для оптимізації прокрутки
+    private static final long SCROLL_DELAY = 150;
 
     public GifAdapter(Context context, List<File> mediaList) {
         this.context = context;
@@ -111,7 +111,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             if (holder.imageView.getDrawable() == null) {
                 RequestOptions options = new RequestOptions()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(500) // Обмежуємо розмір для оптимізації пам'яті
+                    .override(500)
                     .fitCenter();
                 
                 Glide.with(context)
@@ -150,8 +150,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         if (extension.equals(".mp4") || extension.equals(".webm")) {
             holder.videoView.setVisibility(View.VISIBLE);
             holder.imageView.setVisibility(View.GONE);
-            
-            // Попередньо встановлюємо розміри для VideoView
+
             holder.videoView.getLayoutParams().height = 500;
             holder.videoView.setVideoPath(file.getAbsolutePath());
             holder.videoView.setOnPreparedListener(mp -> {
