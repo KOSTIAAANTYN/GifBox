@@ -8,6 +8,31 @@
     <string name="action_settings">Settings</string>
 
     <string name="menu_home">Home</string>
+    <string name="menu_settings">Settings</string>
 
     <string name="accessibility_service_description">GifBox service for adding a button to the context menu of other applications</string>
+    <string name="permission_required">Permission required</string>
+    <string name="permission_message">For GifBox to work, you need to enable the accessibility service. Go to settings?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="info">Information</string>
+    <string name="background_service_info">GifBox now works in background mode! You can close the app, and the GifBox button will still appear when text is selected in other apps.</string>
+    <string name="understand">OK</string>
+    
+    <string name="service_notification_title">GifBox Service</string>
+    <string name="service_notification_text">GifBox is running in background</string>
+    <string name="service_channel_name">GifBox Service</string>
+    <string name="service_channel_description">GifBox service for text selection</string>
+    <string name="service_activated">GifBox service activated</string>
+    <string name="service_will_be_activated">GifBox service will be activated</string>
+    
+    <string name="settings_overlay_button">Enable overlay button</string>
+    <string name="settings_overlay_button_desc">Show GifBox button when text is selected</string>
+    <string name="settings_text_processing">Enable text processing</string>
+    <string name="settings_text_processing_desc">Process selected text when GifBox button is clicked</string>
+    <string name="settings_accessibility">Accessibility settings</string>
+    <string name="settings_accessibility_desc">Open Android accessibility settings</string>
+    <string name="settings_save">Save settings</string>
+    <string name="settings_saved">Settings saved</string>
+    <string name="text_processing_disabled">Text processing is disabled in settings</string>
 </resources>

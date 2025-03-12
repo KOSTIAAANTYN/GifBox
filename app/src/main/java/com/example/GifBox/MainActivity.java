@@ -3,7 +3,10 @@ import android.Manifest;
 
 
 import android.app.Dialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -15,13 +18,17 @@ import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.app.AlertDialog;
+import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +41,9 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.GifBox.databinding.ActivityMainBinding;
+import com.example.GifBox.service.GifBoxAccessibilityService;
+import com.example.GifBox.ui.home.HomeFragment;
+import com.example.GifBox.ui.settings.SettingsFragment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,14 +55,18 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-    private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
     private static final int REQUEST_CODE_PICK_FILES = 1;
-
     private RecyclerView recyclerView;
     private GifAdapter adapter;
     private List<File> mediaList = new ArrayList<>();
+    
+    private DrawerLayout drawer;
+    private NavigationView navigationView;
+    private ActionBarDrawerToggle drawerToggle;
+    
+    private static final String PREFS_NAME = "GifBoxPrefs";
+    private static final String KEY_TEXT_PROCESSING_ENABLED = "text_processing_enabled";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,73 +84,91 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(binding.appBarMain.toolbar);
         binding.appBarMain.fab.setOnClickListener(view -> showBottomDialog());
 
-        DrawerLayout drawer = binding.drawerLayout;
-        NavigationView navigationView = binding.navView;
+        drawer = binding.drawerLayout;
+        navigationView = binding.navView;
 
-        mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home)
-                .setOpenableLayout(drawer)
-                .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
-
-        checkAndRequestPermissions();
+        drawerToggle = new ActionBarDrawerToggle(
+            this, drawer, binding.appBarMain.toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        );
+        drawer.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
+                
+        setupNavigation();
         loadMedia();
+        
+        updateTextProcessingComponentState();
     }
-
-    private void checkAndRequestPermissions() {
-        if (!isAccessibilityServiceEnabled()) {
-            showAccessibilityServiceDialog();
-        }
+    
+    private void updateTextProcessingComponentState() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean textProcessingEnabled = sharedPreferences.getBoolean(KEY_TEXT_PROCESSING_ENABLED, true);
+        
+        PackageManager pm = getPackageManager();
+        ComponentName componentName = new ComponentName(this, TextProcessingActivity.class);
+        
+        int newState = textProcessingEnabled 
+            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
+            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+            
+        pm.setComponentEnabledSetting(
+            componentName,
+            newState,
+            PackageManager.DONT_KILL_APP
+        );
     }
-
-    private boolean isAccessibilityServiceEnabled() {
-        int accessibilityEnabled = 0;
-        try {
-            accessibilityEnabled = Settings.Secure.getInt(
-                getContentResolver(),
-                Settings.Secure.ACCESSIBILITY_ENABLED
-            );
-        } catch (Settings.SettingNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        if (accessibilityEnabled == 1) {
-            String services = Settings.Secure.getString(
-                getContentResolver(),
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            );
-            if (services != null) {
-                return services.toLowerCase().contains(getPackageName().toLowerCase());
+    
+    private void setupNavigation() {
+        navigationView.setNavigationItemSelectedListener(item -> {
+            int id = item.getItemId();
+            
+            if (id == R.id.nav_home) {
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment_content_main, new HomeFragment())
+                    .commit();
+                binding.appBarMain.fab.show();
+                if (recyclerView != null) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                }
+            } else if (id == R.id.nav_settings) {
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment_content_main, new SettingsFragment())
+                    .commit();
+                binding.appBarMain.fab.hide();
+                if (recyclerView != null) {
+                    recyclerView.setVisibility(View.GONE);
+                }
             }
-        }
-        return false;
+            
+            drawer.closeDrawers();
+            return true;
+        });
+        
+        getSupportFragmentManager().beginTransaction()
+            .replace(R.id.nav_host_fragment_content_main, new HomeFragment())
+            .commit();
     }
 
-    private void showAccessibilityServiceDialog() {
-        new AlertDialog.Builder(this)
-            .setTitle("Permission required")
-            .setMessage("For GifBox to work, you need to enable the special features service. Go to settings?")
-            .setPositiveButton("Yes", (dialog, which) -> {
-                Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                startActivity(intent);
-            })
-            .setNegativeButton("No", null)
-            .setCancelable(false)
-            .show();
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        drawerToggle.syncState();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        checkAndRequestPermissions();
         loadMedia();
     }
+
 
     private void loadMedia() {
         mediaList.clear();
         File mediaDirectory = new File(getExternalFilesDir(null), "MyMedia");
+
+        if (!mediaDirectory.exists()) {
+            mediaDirectory.mkdirs();
+        }
 
         if (mediaDirectory.exists()) {
             File[] files = mediaDirectory.listFiles();
@@ -238,9 +270,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
-                || super.onSupportNavigateUp();
+        if (drawer.isDrawerOpen(navigationView)) {
+            drawer.closeDrawer(navigationView);
+        } else {
+            drawer.openDrawer(navigationView);
+        }
+        return true;
     }
 }
 
