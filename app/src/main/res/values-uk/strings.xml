@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GifBox</string>
+    <string name="navigation_drawer_open">Відкрити панель навігації</string>
+    <string name="navigation_drawer_close">Закрити панель навігації</string>
+    <string name="nav_header_title">1</string>
+    <string name="nav_header_subtitle">2</string>
+    <string name="nav_header_desc">Заголовок навігації</string>
+    <string name="action_settings">Налаштування</string>
+
+    <string name="menu_home">Головна</string>
+    <string name="menu_settings">Налаштування</string>
+
+    <string name="accessibility_service_description">Сервіс GifBox для додавання кнопки до контекстного меню інших додатків</string>
+    <string name="permission_required">Потрібен дозвіл</string>
+    <string name="permission_message">Для роботи GifBox потрібно увімкнути сервіс спеціальних можливостей. Перейти до налаштувань?</string>
+    <string name="yes">Так</string>
+    <string name="no">Ні</string>
+    <string name="info">Інформація</string>
+    <string name="background_service_info">GifBox тепер працює у фоновому режимі! Ви можете закрити додаток, і кнопка GifBox все одно з\'явиться, коли текст буде виділено в інших додатках.</string>
+    <string name="understand">OK</string>
+    
+    <string name="service_notification_title">Сервіс GifBox</string>
+    <string name="service_notification_text">GifBox працює у фоновому режимі</string>
+    <string name="service_channel_name">Сервіс GifBox</string>
+    <string name="service_channel_description">Сервіс GifBox для виділення тексту</string>
+    <string name="service_activated">Сервіс GifBox активовано</string>
+    <string name="service_will_be_activated">Сервіс GifBox буде активовано</string>
+    
+    <string name="settings_button_type">Тип кнопки</string>
+    <string name="settings_button_type_desc">Виберіть, який тип кнопки використовувати при виділенні тексту</string>
+    <string name="settings_button_function">Функція кнопки:</string>
+    <string name="settings_enable_button">Увімкнути кнопку:</string>
+    
+    <string name="settings_overlay_button">Кнопка накладання</string>
+    <string name="settings_overlay_button_desc">Кнопка, яка з\'являється поруч з контекстним меню</string>
+    <string name="settings_context_menu_button">Кнопка у системному контекстному меню</string>
+    <string name="settings_context_menu_button_desc">Кнопка, яка з\'являється у системному контекстному меню</string>
+    
+    <string name="settings_text_processing">Увімкнути обробку тексту</string>
+    <string name="settings_text_processing_desc">Обробляти виділений текст при натисканні на кнопку GifBox</string>
+    <string name="settings_accessibility">Налаштування спеціальних можливостей</string>
+    <string name="settings_accessibility_desc">Відкрити налаштування спеціальних можливостей Android</string>
+    <string name="settings_save">Зберегти налаштування</string>
+    <string name="settings_saved">Налаштування збережено</string>
+    <string name="text_processing_disabled">Обробку тексту вимкнено в налаштуваннях</string>
+    
+    <string name="settings_mini_search">Використовувати міні-пошук</string>
+    <string name="settings_mini_search_desc">Показувати міні-пошук замість прямої обробки при натисканні на кнопку GifBox</string>
+    
+    <string name="search_hint">Пошук GIF...</string>
+    <string name="no_results">Не знайдено відповідних GIF</string>
+    
+    <string name="gif_copied">GIF скопійовано в буфер обміну</string>
+    <string name="error_copying_gif">Помилка копіювання GIF: %1$s</string>
+    <string name="share_via">Поділитися через</string>
+    <string name="error_sharing_file">Помилка поширення файлу: %1$s</string>
+    
+    <string-array name="button_types">
+        <item>Обидві кнопки</item>
+        <item>Тільки кнопка накладання</item>
+        <item>Тільки кнопка в контекстному меню</item>
+    </string-array>
+    
+    <string-array name="button_functions">
+        <item>Пряма обробка тексту</item>
+        <item>Міні-пошук</item>
+    </string-array>
+</resources> 

@@ -8,9 +8,10 @@ import android.os.Build;
 import android.os.Handler;
 import android.provider.Settings;
 
-import com.example.GifBox.service.GifBoxAccessibilityService;
+import com.example.GifBox.buttons.OverlayButton;
 
 public class AccessibilitySettingsObserver extends ContentObserver {
+    private static final String TAG = "AccessibilitySettingsObserver";
     private final Context context;
     private boolean wasEnabled;
 
@@ -58,7 +59,7 @@ public class AccessibilitySettingsObserver extends ContentObserver {
 
     private void startAccessibilityService() {
         try {
-            Intent serviceIntent = new Intent(context, GifBoxAccessibilityService.class);
+            Intent serviceIntent = new Intent(context, OverlayButton.class);
             serviceIntent.setAction("android.accessibilityservice.AccessibilityService");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent);

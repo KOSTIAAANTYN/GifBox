@@ -14,7 +14,7 @@
 
 
     <application
-        android:name=".GifBoxApplication"
+        android:name=".receiver.GifBoxApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -40,7 +40,7 @@
         </activity>
 
         <activity
-            android:name=".TextProcessingActivity"
+            android:name=".buttons.ContextButton"
             android:exported="true"
             android:enabled="true"
             android:theme="@style/Theme.GifBox.NoActionBar">
@@ -49,6 +49,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+        </activity>
+        
+        <activity
+            android:name=".functions.MiniSearchActivity"
+            android:exported="true"
+            android:enabled="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:launchMode="singleTask"
+            android:theme="@style/MiniSearchTheme">
         </activity>
 
         <provider
@@ -62,7 +72,7 @@
         </provider>
 
         <service
-            android:name=".service.GifBoxAccessibilityService"
+            android:name=".buttons.OverlayButton"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:directBootAware="true"
             android:enabled="true"

@@ -8,12 +8,13 @@ import android.provider.Settings;
 import android.widget.Toast;
 
 import com.example.GifBox.R;
-import com.example.GifBox.service.GifBoxAccessibilityService;
+import com.example.GifBox.buttons.OverlayButton;
 
 /**
  * Receiver for starting the accessibility service when the device is booted
  */
 public class BootCompletedReceiver extends BroadcastReceiver {
+    private static final String TAG = "BootCompletedReceiver";
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction() != null && 
@@ -24,7 +25,7 @@ public class BootCompletedReceiver extends BroadcastReceiver {
                 Toast.makeText(context, context.getString(R.string.service_will_be_activated), Toast.LENGTH_SHORT).show();
             
                 try {
-                    Intent serviceIntent = new Intent(context, GifBoxAccessibilityService.class);
+                    Intent serviceIntent = new Intent(context, OverlayButton.class);
                     serviceIntent.setAction("android.accessibilityservice.AccessibilityService");
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         context.startForegroundService(serviceIntent);

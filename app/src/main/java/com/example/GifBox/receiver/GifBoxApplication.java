@@ -1,10 +1,8 @@
-package com.example.GifBox;
+package com.example.GifBox.receiver;
 
 import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
-
-import com.example.GifBox.receiver.AccessibilitySettingsObserver;
 
 public class GifBoxApplication extends Application {
     private AccessibilitySettingsObserver accessibilitySettingsObserver;

@@ -11,4 +11,5 @@
 
     <color name="button_success">#4CAF50</color>
     <color name="button_error">#F44336</color>
+    <color name="button_processing">#FFC107</color>
 </resources>

@@ -1,4 +1,4 @@
-package com.example.GifBox.utils;
+package com.example.GifBox.functions;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -12,9 +12,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextProcessingUtils {
+public class TextProcessing {
     
-    private static final String TAG = "TextProcessingUtils";
+    private static final String TAG = "TextProcessing";
     
     /**
      * Process text and find matching media files
@@ -137,6 +137,28 @@ public class TextProcessingUtils {
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(context, "Error sharing file: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Open search dialog with pre-filled text
+     * @param context Application context
+     * @param searchText Text to search for
+     */
+    public static void openSearchDialog(Context context, String searchText) {
+        try {
+            Intent intent = new Intent(context, MiniSearchActivity.class);
+            intent.putExtra(Intent.EXTRA_PROCESS_TEXT, searchText);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(context, "Error opening search: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            processText(context, searchText);
         }
     }
 } 

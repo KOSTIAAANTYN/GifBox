@@ -26,8 +26,16 @@
     <string name="service_activated">GifBox service activated</string>
     <string name="service_will_be_activated">GifBox service will be activated</string>
     
-    <string name="settings_overlay_button">Enable overlay button</string>
-    <string name="settings_overlay_button_desc">Show GifBox button when text is selected</string>
+    <string name="settings_button_type">Button type</string>
+    <string name="settings_button_type_desc">Select which button type to use when text is selected</string>
+    <string name="settings_button_function">Button function:</string>
+    <string name="settings_enable_button">Enable button:</string>
+    
+    <string name="settings_overlay_button">Overlay button</string>
+    <string name="settings_overlay_button_desc">Button that appears next to the context menu</string>
+    <string name="settings_context_menu_button">System context menu button</string>
+    <string name="settings_context_menu_button_desc">Button that appears in the system context menu</string>
+    
     <string name="settings_text_processing">Enable text processing</string>
     <string name="settings_text_processing_desc">Process selected text when GifBox button is clicked</string>
     <string name="settings_accessibility">Accessibility settings</string>
@@ -35,4 +43,26 @@
     <string name="settings_save">Save settings</string>
     <string name="settings_saved">Settings saved</string>
     <string name="text_processing_disabled">Text processing is disabled in settings</string>
+    
+    <string name="settings_mini_search">Use mini search dialog</string>
+    <string name="settings_mini_search_desc">Show mini search dialog instead of direct processing when GifBox button is clicked</string>
+    
+    <string name="search_hint">Search GIFs...</string>
+    <string name="no_results">No matching GIFs found</string>
+    
+    <string name="gif_copied">GIF copied to clipboard</string>
+    <string name="error_copying_gif">Error copying GIF: %1$s</string>
+    <string name="share_via">Share via</string>
+    <string name="error_sharing_file">Error sharing file: %1$s</string>
+    
+    <string-array name="button_types">
+        <item>Both buttons</item>
+        <item>Overlay button only</item>
+        <item>Context menu button only</item>
+    </string-array>
+    
+    <string-array name="button_functions">
+        <item>Direct text processing</item>
+        <item>Mini search dialog</item>
+    </string-array>
 </resources>

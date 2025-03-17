@@ -10,7 +10,9 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,16 +20,23 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.GifBox.R;
-import com.example.GifBox.TextProcessingActivity;
 
 public class SettingsFragment extends Fragment {
 
     private static final String PREFS_NAME = "GifBoxPrefs";
-    private static final String KEY_OVERLAY_ENABLED = "overlay_enabled";
-    private static final String KEY_TEXT_PROCESSING_ENABLED = "text_processing_enabled";
+    public static final String KEY_OVERLAY_ENABLED = "overlay_enabled";
+    public static final String KEY_CONTEXT_MENU_ENABLED = "context_menu_enabled";
+    public static final String KEY_OVERLAY_FUNCTION = "overlay_function";
+    public static final String KEY_CONTEXT_MENU_FUNCTION = "context_menu_function";
+    
+
+    public static final int FUNCTION_DIRECT_PROCESSING = 0;
+    public static final int FUNCTION_MINI_SEARCH = 1;
 
     private SwitchCompat switchOverlay;
-    private SwitchCompat switchTextProcessing;
+    private SwitchCompat switchContextMenu;
+    private Spinner spinnerOverlayFunction;
+    private Spinner spinnerContextMenuFunction;
     private Button buttonAccessibility;
     private Button buttonSave;
     private SharedPreferences sharedPreferences;
@@ -39,27 +48,51 @@ public class SettingsFragment extends Fragment {
         sharedPreferences = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         switchOverlay = root.findViewById(R.id.switchOverlay);
-        switchTextProcessing = root.findViewById(R.id.switchTextProcessing);
+        switchContextMenu = root.findViewById(R.id.switchContextMenu);
+        spinnerOverlayFunction = root.findViewById(R.id.spinnerOverlayFunction);
+        spinnerContextMenuFunction = root.findViewById(R.id.spinnerContextMenuFunction);
         buttonAccessibility = root.findViewById(R.id.buttonAccessibility);
         buttonSave = root.findViewById(R.id.buttonSave);
 
+        setupSpinners();
         loadSettings();
         setupListeners();
 
         return root;
     }
+    
+    private void setupSpinners() {        
+        ArrayAdapter<CharSequence> functionAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.button_functions,
+            android.R.layout.simple_spinner_item
+        );
+        functionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerOverlayFunction.setAdapter(functionAdapter);
+        
+        ArrayAdapter<CharSequence> contextMenuFunctionAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.button_functions,
+            android.R.layout.simple_spinner_item
+        );
+        contextMenuFunctionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerContextMenuFunction.setAdapter(contextMenuFunctionAdapter);
+    }
 
     private void loadSettings() {
-        boolean overlayEnabled = sharedPreferences.getBoolean(KEY_OVERLAY_ENABLED, true);
-        boolean textProcessingEnabled = sharedPreferences.getBoolean(KEY_TEXT_PROCESSING_ENABLED, true);
+        boolean overlayEnabled = sharedPreferences.getBoolean(KEY_OVERLAY_ENABLED, false);
+        boolean contextMenuEnabled = sharedPreferences.getBoolean(KEY_CONTEXT_MENU_ENABLED, false);
+        int overlayFunction = sharedPreferences.getInt(KEY_OVERLAY_FUNCTION, FUNCTION_DIRECT_PROCESSING);
+        int contextMenuFunction = sharedPreferences.getInt(KEY_CONTEXT_MENU_FUNCTION, FUNCTION_MINI_SEARCH);
 
         switchOverlay.setChecked(overlayEnabled);
-        switchTextProcessing.setChecked(textProcessingEnabled);
+        switchContextMenu.setChecked(contextMenuEnabled);
+        spinnerOverlayFunction.setSelection(overlayFunction);
+        spinnerContextMenuFunction.setSelection(contextMenuFunction);
     }
 
     private void setupListeners() {
         buttonAccessibility.setOnClickListener(v -> openAccessibilitySettings());
-        
         buttonSave.setOnClickListener(v -> saveSettings());
     }
 
@@ -70,34 +103,30 @@ public class SettingsFragment extends Fragment {
 
     private void saveSettings() {
         boolean overlayEnabled = switchOverlay.isChecked();
-        boolean textProcessingEnabled = switchTextProcessing.isChecked();
-        
-        boolean previousTextProcessingEnabled = sharedPreferences.getBoolean(KEY_TEXT_PROCESSING_ENABLED, true);
+        boolean contextMenuEnabled = switchContextMenu.isChecked();
+        int overlayFunction = spinnerOverlayFunction.getSelectedItemPosition();
+        int contextMenuFunction = spinnerContextMenuFunction.getSelectedItemPosition();
         
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY_OVERLAY_ENABLED, overlayEnabled);
-        editor.putBoolean(KEY_TEXT_PROCESSING_ENABLED, textProcessingEnabled);
+        editor.putBoolean(KEY_CONTEXT_MENU_ENABLED, contextMenuEnabled);
+        editor.putInt(KEY_OVERLAY_FUNCTION, overlayFunction);
+        editor.putInt(KEY_CONTEXT_MENU_FUNCTION, contextMenuFunction);
         editor.apply();
-        
-        if (previousTextProcessingEnabled != textProcessingEnabled) {
-            updateTextProcessingComponent(textProcessingEnabled);
-        }
 
-        Toast.makeText(requireContext(), R.string.settings_saved, Toast.LENGTH_SHORT).show();
-    }
-    
-    private void updateTextProcessingComponent(boolean enabled) {
         PackageManager pm = requireActivity().getPackageManager();
-        ComponentName componentName = new ComponentName(requireActivity(), TextProcessingActivity.class);
+        ComponentName contextButtonComponent = new ComponentName(requireContext(), "com.example.GifBox.buttons.ContextButton");
         
-        int newState = enabled 
+        int newState = contextMenuEnabled 
             ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             
         pm.setComponentEnabledSetting(
-            componentName,
+            contextButtonComponent,
             newState,
             PackageManager.DONT_KILL_APP
         );
+
+        Toast.makeText(requireContext(), R.string.settings_saved, Toast.LENGTH_SHORT).show();
     }
 } 

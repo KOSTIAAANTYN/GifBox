@@ -1,5 +1,4 @@
 package com.example.GifBox;
-import android.Manifest;
 
 
 import android.app.Dialog;
@@ -12,10 +11,10 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
-import android.provider.Settings;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
@@ -23,25 +22,18 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.app.AlertDialog;
-import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.GifBox.buttons.ContextButton;
 import com.google.android.material.navigation.NavigationView;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.example.GifBox.databinding.ActivityMainBinding;
-import com.example.GifBox.service.GifBoxAccessibilityService;
 import com.example.GifBox.ui.home.HomeFragment;
 import com.example.GifBox.ui.settings.SettingsFragment;
 
@@ -55,18 +47,20 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
     private static final int REQUEST_CODE_PICK_FILES = 1;
     private RecyclerView recyclerView;
     private GifAdapter adapter;
     private List<File> mediaList = new ArrayList<>();
+    private List<File> filteredMediaList = new ArrayList<>();
+    private Handler mainHandler;
     
     private DrawerLayout drawer;
     private NavigationView navigationView;
     private ActionBarDrawerToggle drawerToggle;
     
     private static final String PREFS_NAME = "GifBoxPrefs";
-    private static final String KEY_TEXT_PROCESSING_ENABLED = "text_processing_enabled";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,11 +68,15 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        
+        initializeDefaultSettings();
+        
+        mainHandler = new Handler(Looper.getMainLooper());
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
-        adapter = new GifAdapter(this, mediaList);
+        adapter = new GifAdapter(this, filteredMediaList);
         recyclerView.setAdapter(adapter);
 
         setSupportActionBar(binding.appBarMain.toolbar);
@@ -100,14 +98,28 @@ public class MainActivity extends AppCompatActivity {
         updateTextProcessingComponentState();
     }
     
+    private void initializeDefaultSettings() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        if (!sharedPreferences.contains(SettingsFragment.KEY_OVERLAY_ENABLED)) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(SettingsFragment.KEY_OVERLAY_ENABLED, false);
+            editor.putBoolean(SettingsFragment.KEY_CONTEXT_MENU_ENABLED, false);
+            editor.putInt(SettingsFragment.KEY_OVERLAY_FUNCTION, SettingsFragment.FUNCTION_DIRECT_PROCESSING);
+            editor.putInt(SettingsFragment.KEY_CONTEXT_MENU_FUNCTION, SettingsFragment.FUNCTION_MINI_SEARCH);
+            editor.apply();
+            
+            updateTextProcessingComponentState();
+        }
+    }
+    
     private void updateTextProcessingComponentState() {
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean textProcessingEnabled = sharedPreferences.getBoolean(KEY_TEXT_PROCESSING_ENABLED, true);
+        boolean contextMenuEnabled = sharedPreferences.getBoolean(SettingsFragment.KEY_CONTEXT_MENU_ENABLED, false);
         
         PackageManager pm = getPackageManager();
-        ComponentName componentName = new ComponentName(this, TextProcessingActivity.class);
+        ComponentName componentName = new ComponentName(this, ContextButton.class);
         
-        int newState = textProcessingEnabled 
+        int newState = contextMenuEnabled 
             ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             
@@ -161,9 +173,37 @@ public class MainActivity extends AppCompatActivity {
         loadMedia();
     }
 
+    public boolean filterMedia(String query) {
+        List<File> newFilteredList = new ArrayList<>();
+        
+        if (query == null || query.isEmpty()) {
+            newFilteredList.addAll(mediaList);
+        } else {
+            String lowerCaseQuery = query.toLowerCase();
+            for (File file : mediaList) {
+                if (file.getName().toLowerCase().contains(lowerCaseQuery)) {
+                    newFilteredList.add(file);
+                }
+            }
+        }
+        
+        filteredMediaList.clear();
+        filteredMediaList.addAll(newFilteredList);
+        
+        mainHandler.post(() -> {
+            try {
+                adapter.notifyDataSetChanged();
+            } catch (Exception e) {
+            }
+        });
+        
+        return !filteredMediaList.isEmpty();
+    }
 
     private void loadMedia() {
         mediaList.clear();
+        filteredMediaList.clear();
+        
         File mediaDirectory = new File(getExternalFilesDir(null), "MyMedia");
 
         if (!mediaDirectory.exists()) {
@@ -174,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
             File[] files = mediaDirectory.listFiles();
             if (files != null) {
                 mediaList.addAll(Arrays.asList(files));
+                filteredMediaList.addAll(mediaList);
             }
         }
 
