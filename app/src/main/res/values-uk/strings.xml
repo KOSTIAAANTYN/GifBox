@@ -36,6 +36,8 @@
     <string name="settings_overlay_button_desc">Кнопка, яка з\'являється поруч з контекстним меню</string>
     <string name="settings_context_menu_button">Кнопка у системному контекстному меню</string>
     <string name="settings_context_menu_button_desc">Кнопка, яка з\'являється у системному контекстному меню</string>
+    <string name="settings_translate_button">Кнопка у меню перекладу</string>
+    <string name="settings_translate_button_desc">Кнопка, яка з\'являється у системному меню перекладу</string>
     
     <string name="settings_text_processing">Увімкнути обробку тексту</string>
     <string name="settings_text_processing_desc">Обробляти виділений текст при натисканні на кнопку GifBox</string>
@@ -55,6 +57,21 @@
     <string name="error_copying_gif">Помилка копіювання GIF: %1$s</string>
     <string name="share_via">Поділитися через</string>
     <string name="error_sharing_file">Помилка поширення файлу: %1$s</string>
+    
+    <string name="convert_to_gif">Конвертувати в GIF</string>
+    <string name="convert_video_title">Конвертувати відео у GIF</string>
+    <string name="file_name">Файл: %1$s</string>
+    <string name="file_info">Тривалість: %1$s, Розмір: %2$s, Роздільна здатність: %3$dx%4$d</string>
+    <string name="quality_high">Висока</string>
+    <string name="quality_medium">Середня</string>
+    <string name="quality_low">Низька</string>
+    <string name="fps_label">Кадрів/с: %1$d</string>
+    <string name="cancel">Скасувати</string>
+    <string name="convert">Конвертувати</string>
+    <string name="conversion_progress">Прогрес конвертації: %1$d%%</string>
+    <string name="conversion_complete">Конвертацію завершено</string>
+    <string name="conversion_failed">Помилка конвертації: %1$s</string>
+    <string name="converting">Конвертація...</string>
     
     <string-array name="button_types">
         <item>Обидві кнопки</item>

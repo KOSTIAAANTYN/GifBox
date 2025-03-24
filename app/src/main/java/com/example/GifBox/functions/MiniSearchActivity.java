@@ -55,6 +55,7 @@ public class MiniSearchActivity extends Activity {
     private List<File> filteredMediaList = new ArrayList<>();
     private Handler searchHandler;
     private boolean isSearching = false;
+    private Runnable performSearchRunnable;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,14 @@ public class MiniSearchActivity extends Activity {
         recyclerView.setAdapter(adapter);
         
         loadMedia();
+        
+        performSearchRunnable = () -> {
+            if (isSearching) return;
+            
+            String query = searchEditText.getText().toString();
+            performSearch(query);
+        };
+        
         setupSearchFunctionality();
         
         Intent intent = getIntent();
@@ -158,7 +167,26 @@ public class MiniSearchActivity extends Activity {
         }
     }
     
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_APP_SWITCH) {
+            finish();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (isLaunchedFromService() && !hasFocus) {
+            finish();
+        }
+    }
+    
     private void setupSearchFunctionality() {
+        final long SEARCH_DELAY_MS = 800;
+        
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -167,10 +195,13 @@ public class MiniSearchActivity extends Activity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 clearSearchButton.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                
+                searchHandler.removeCallbacks(performSearchRunnable);
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                searchHandler.postDelayed(performSearchRunnable, SEARCH_DELAY_MS);
             }
         });
         
@@ -178,13 +209,11 @@ public class MiniSearchActivity extends Activity {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || 
                     (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                 
-                if (isSearching) return true;
-                
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
                 
-                String query = searchEditText.getText().toString();
-                performSearch(query);
+                searchHandler.removeCallbacks(performSearchRunnable);
+                performSearchRunnable.run();
                 
                 return true;
             }

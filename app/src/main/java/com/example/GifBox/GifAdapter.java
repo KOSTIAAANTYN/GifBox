@@ -35,8 +35,16 @@ import com.example.GifBox.R;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import android.app.ProgressDialog;
+import com.example.GifBox.utils.VideoToGifConverter;
+import androidx.appcompat.app.AlertDialog;
+import android.content.DialogInterface;
+import android.util.Log;
+import com.example.GifBox.MainActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
+    private static final String TAG = "GifAdapter";
     private Context context;
     private List<File> mediaList;
     private RecyclerView recyclerView;
@@ -222,9 +230,27 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         View shareButton = dialog.findViewById(R.id.shareButton);
         View renameButton = dialog.findViewById(R.id.renameButton);
         View deleteButton = dialog.findViewById(R.id.deleteButton);
+        View convertButton = dialog.findViewById(R.id.convertButton);
+
+        boolean isVideo = file.getName().endsWith(".mp4") || file.getName().endsWith(".webm");
+        
+        if (convertButton != null) {
+            if (file.getName().toLowerCase().endsWith(".mp4") ||
+                file.getName().toLowerCase().endsWith(".webm") ||
+                file.getName().toLowerCase().endsWith(".3gp")) {
+
+                convertButton.setVisibility(View.VISIBLE);
+                convertButton.setOnClickListener(v -> {
+                    dialog.dismiss();
+                    startVideoToGifConversion(context, file);
+                });
+            } else {
+                convertButton.setVisibility(View.GONE);
+            }
+        }
 
         gifNameTextView.setText(file.getName());
-        if (file.getName().endsWith(".mp4") || file.getName().endsWith(".webm")) {
+        if (isVideo) {
             videoView.setVisibility(View.VISIBLE);
             gifImageView.setVisibility(View.GONE);
             videoView.setVideoPath(file.getAbsolutePath());
@@ -341,9 +367,14 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                     gifNameTextView.setText(newFile.getName());
                     renameDialog.dismiss();
                     parentDialog.dismiss();
-                    Toast.makeText(context, "The file has been renamed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "File renamed successfully", Toast.LENGTH_SHORT).show();
+                    
+                    if (context instanceof MainActivity) {
+                        MainActivity mainActivity = (MainActivity) context;
+                        mainActivity.refreshMediaList();
+                    }
                 } else {
-                    Toast.makeText(context, "Error renaming a file", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Error renaming file", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -389,12 +420,17 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 if (position != -1) {
                     mediaList.remove(position);
                     notifyItemRemoved(position);
-                    Toast.makeText(context, "File deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "File deleted successfully", Toast.LENGTH_SHORT).show();
                 }
                 confirmDialog.dismiss();
                 parentDialog.dismiss();
+                
+                if (context instanceof MainActivity) {
+                    MainActivity mainActivity = (MainActivity) context;
+                    mainActivity.refreshMediaList();
+                }
             } else {
-                Toast.makeText(context, "Error when deleting a file", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Error deleting file", Toast.LENGTH_SHORT).show();
             }
         });
         
@@ -414,10 +450,10 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             ClipData clip = ClipData.newUri(context.getContentResolver(), "GIF", contentUri);
             clipboard.setPrimaryClip(clip);
 
-            Toast.makeText(context, "GIF copied to the clipboard", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "GIF copied to clipboard", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(context, "Error copying a GIF", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Error copying GIF", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -435,6 +471,87 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             imageView = itemView.findViewById(R.id.imageView);
             videoView = itemView.findViewById(R.id.videoView);
         }
+    }
+
+    private void startVideoToGifConversion(Context context, File videoFile) {
+        VideoToGifConverter.convertVideoToGif(context, videoFile, new VideoToGifConverter.ConversionCallback() {
+            @Override
+            public void onConversionStart() {
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    ProgressDialog progressDialog = new ProgressDialog(context);
+                    progressDialog.setTitle(context.getString(R.string.converting));
+                    progressDialog.setMessage(context.getString(R.string.conversion_progress, 0));
+                    progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    progressDialog.setMax(100);
+                    progressDialog.setProgress(0);
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+                    
+                    this.setTag(progressDialog);
+                });
+            }
+            
+            @Override
+            public void onConversionProgress(int progress) {
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    ProgressDialog progressDialog = (ProgressDialog) this.getTag();
+                    if (progressDialog != null) {
+                        progressDialog.setProgress(progress);
+                        progressDialog.setMessage(context.getString(R.string.conversion_progress, progress));
+                    }
+                });
+            }
+            
+            @Override
+            public void onConversionComplete(File outputFile) {
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    ProgressDialog progressDialog = (ProgressDialog) this.getTag();
+                    if (progressDialog != null) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    Toast.makeText(context, context.getString(R.string.conversion_complete) + ": " + outputFile.getName(), Toast.LENGTH_LONG).show();
+                    
+                    if (outputFile.exists()) {
+                        try {
+                            if (context instanceof MainActivity) {
+                                MainActivity activity = (MainActivity) context;
+                                activity.refreshMediaList();
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                });
+            }
+            
+            @Override
+            public void onConversionFailed(String errorMessage) {
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> {
+                    ProgressDialog progressDialog = (ProgressDialog) this.getTag();
+                    if (progressDialog != null) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                        .setTitle(context.getString(R.string.conversion_failed, ""))
+                        .setMessage(errorMessage)
+                        .setPositiveButton(android.R.string.ok, null);
+                    builder.show();
+                });
+            }
+            
+            private ProgressDialog tag;
+            public void setTag(ProgressDialog dialog) {
+                this.tag = dialog;
+            }
+            public Object getTag() {
+                return tag;
+            }
+        });
     }
 }
 

@@ -29,6 +29,7 @@ public class HomeFragment extends Fragment {
     private TextView noResultsTextView;
     private Handler searchHandler;
     private boolean isSearching = false;
+    private Runnable performSearchRunnable;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -39,12 +40,31 @@ public class HomeFragment extends Fragment {
         noResultsTextView = root.findViewById(R.id.noResultsTextView);
         searchHandler = new Handler(Looper.getMainLooper());
         
+        performSearchRunnable = () -> {
+            if (isSearching) return;
+            isSearching = true;
+            
+            String query = searchEditText.getText().toString();
+            
+            if (getActivity() instanceof MainActivity) {
+                MainActivity activity = (MainActivity) getActivity();
+                boolean hasResults = activity.filterMedia(query);
+                noResultsTextView.setVisibility(hasResults || query.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+            
+            searchHandler.post(() -> {
+                isSearching = false;
+            });
+        };
+        
         setupSearchFunctionality();
         
         return root;
     }
     
     private void setupSearchFunctionality() {
+        final long SEARCH_DELAY_MS = 800;
+        
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -53,10 +73,13 @@ public class HomeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 clearSearchButton.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                
+                searchHandler.removeCallbacks(performSearchRunnable);
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                searchHandler.postDelayed(performSearchRunnable, SEARCH_DELAY_MS);
             }
         });
         
@@ -64,23 +87,11 @@ public class HomeFragment extends Fragment {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || 
                     (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                 
-                if (isSearching) return true;
-                isSearching = true;
-                
                 InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
                 
-                String query = searchEditText.getText().toString();
-                
-                if (getActivity() instanceof MainActivity) {
-                    MainActivity activity = (MainActivity) getActivity();
-                    boolean hasResults = activity.filterMedia(query);
-                    noResultsTextView.setVisibility(hasResults || query.isEmpty() ? View.GONE : View.VISIBLE);
-                }
-                
-                searchHandler.post(() -> {
-                    isSearching = false;
-                });
+                searchHandler.removeCallbacks(performSearchRunnable);
+                performSearchRunnable.run();
                 
                 return true;
             }
@@ -106,6 +117,15 @@ public class HomeFragment extends Fragment {
         super.onDestroyView();
         if (searchHandler != null) {
             searchHandler.removeCallbacksAndMessages(null);
+        }
+    }
+    
+
+    public void resetSearch() {
+        if (searchEditText != null) {
+            searchEditText.setText("");
+            clearSearchButton.setVisibility(View.GONE);
+            noResultsTextView.setVisibility(View.GONE);
         }
     }
 }

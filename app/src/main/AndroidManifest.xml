@@ -52,6 +52,18 @@
         </activity>
         
         <activity
+            android:name=".buttons.TranslateOption"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.GifBox.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.TRANSLATE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        
+        <activity
             android:name=".functions.MiniSearchActivity"
             android:exported="true"
             android:enabled="true"

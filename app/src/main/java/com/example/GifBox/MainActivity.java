@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.OpenableColumns;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
@@ -25,10 +26,16 @@ import android.widget.LinearLayout;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.GifBox.buttons.ContextButton;
+import com.example.GifBox.buttons.TranslateOption;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -46,6 +53,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
@@ -54,13 +63,15 @@ public class MainActivity extends AppCompatActivity {
     private GifAdapter adapter;
     private List<File> mediaList = new ArrayList<>();
     private List<File> filteredMediaList = new ArrayList<>();
-    private Handler mainHandler;
     
     private DrawerLayout drawer;
     private NavigationView navigationView;
     private ActionBarDrawerToggle drawerToggle;
     
+    private SwipeRefreshLayout swipeRefreshLayout;
+    
     private static final String PREFS_NAME = "GifBoxPrefs";
+    private static final String KEY_TEXT_PROCESSING_ENABLED = "text_processing_enabled";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,8 +81,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         
         initializeDefaultSettings();
-        
-        mainHandler = new Handler(Looper.getMainLooper());
+
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
@@ -93,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         drawerToggle.syncState();
                 
         setupNavigation();
+        setupSwipeRefresh();
         loadMedia();
         
         updateTextProcessingComponentState();
@@ -104,8 +115,11 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(SettingsFragment.KEY_OVERLAY_ENABLED, false);
             editor.putBoolean(SettingsFragment.KEY_CONTEXT_MENU_ENABLED, false);
+            editor.putBoolean(SettingsFragment.KEY_TRANSLATE_ENABLED, false);
             editor.putInt(SettingsFragment.KEY_OVERLAY_FUNCTION, SettingsFragment.FUNCTION_DIRECT_PROCESSING);
             editor.putInt(SettingsFragment.KEY_CONTEXT_MENU_FUNCTION, SettingsFragment.FUNCTION_MINI_SEARCH);
+            editor.putInt(SettingsFragment.KEY_TRANSLATE_FUNCTION, SettingsFragment.FUNCTION_MINI_SEARCH);
+            editor.putBoolean(KEY_TEXT_PROCESSING_ENABLED, false);
             editor.apply();
             
             updateTextProcessingComponentState();
@@ -115,17 +129,29 @@ public class MainActivity extends AppCompatActivity {
     private void updateTextProcessingComponentState() {
         SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean contextMenuEnabled = sharedPreferences.getBoolean(SettingsFragment.KEY_CONTEXT_MENU_ENABLED, false);
+        boolean translateEnabled = sharedPreferences.getBoolean(SettingsFragment.KEY_TRANSLATE_ENABLED, false);
         
         PackageManager pm = getPackageManager();
-        ComponentName componentName = new ComponentName(this, ContextButton.class);
+        ComponentName contextButtonComponent = new ComponentName(this, ContextButton.class);
+        ComponentName translateButtonComponent = new ComponentName(this, TranslateOption.class);
         
-        int newState = contextMenuEnabled 
+        int contextMenuState = contextMenuEnabled 
             ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED 
             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             
+        int translateState = translateEnabled
+            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+            
         pm.setComponentEnabledSetting(
-            componentName,
-            newState,
+            contextButtonComponent,
+            contextMenuState,
+            PackageManager.DONT_KILL_APP
+        );
+        
+        pm.setComponentEnabledSetting(
+            translateButtonComponent,
+            translateState,
             PackageManager.DONT_KILL_APP
         );
     }
@@ -170,37 +196,42 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadMedia();
+        refreshMediaList();
     }
 
     public boolean filterMedia(String query) {
-        List<File> newFilteredList = new ArrayList<>();
+        filteredMediaList.clear();
         
-        if (query == null || query.isEmpty()) {
-            newFilteredList.addAll(mediaList);
+        if (query.isEmpty()) {
+            filteredMediaList.addAll(mediaList);
         } else {
             String lowerCaseQuery = query.toLowerCase();
             for (File file : mediaList) {
                 if (file.getName().toLowerCase().contains(lowerCaseQuery)) {
-                    newFilteredList.add(file);
+                    filteredMediaList.add(file);
                 }
             }
         }
         
-        filteredMediaList.clear();
-        filteredMediaList.addAll(newFilteredList);
+        adapter.notifyDataSetChanged();
         
-        mainHandler.post(() -> {
-            try {
-                adapter.notifyDataSetChanged();
-            } catch (Exception e) {
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            Fragment fragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+            if (fragment != null) {
+                NavController navController = NavHostFragment.findNavController(fragment);
+                NavDestination currentDestination = navController.getCurrentDestination();
+                if (currentDestination != null && currentDestination.getId() == R.id.nav_home) {
+                    activateHomeTab();
+                }
             }
-        });
+        } catch (Exception e) {
+        }
         
         return !filteredMediaList.isEmpty();
     }
 
-    private void loadMedia() {
+    public void loadMedia() {
         mediaList.clear();
         filteredMediaList.clear();
         
@@ -221,6 +252,47 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
+    public void refreshMediaList() {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            performMediaListRefresh();
+        } else {
+            runOnUiThread(this::performMediaListRefresh);
+        }
+    }
+    
+    private void performMediaListRefresh() {
+        mediaList.clear();
+        filteredMediaList.clear();
+        
+        File mediaDirectory = new File(getExternalFilesDir(null), "MyMedia");
+        if (mediaDirectory.exists()) {
+            File[] files = mediaDirectory.listFiles();
+            if (files != null) {
+                mediaList.addAll(Arrays.asList(files));
+                filteredMediaList.addAll(mediaList);
+            }
+        }
+        
+        adapter.notifyDataSetChanged();
+
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            Fragment fragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+            if (fragment != null) {
+                NavController navController = NavHostFragment.findNavController(fragment);
+                NavDestination currentDestination = navController.getCurrentDestination();
+                if (currentDestination != null && currentDestination.getId() == R.id.nav_home) {
+                    HomeFragment homeFragment = (HomeFragment) navController.getCurrentBackStackEntry()
+                            .getDestination()
+                            .getLabel();
+                    if (homeFragment != null) {
+                        homeFragment.resetSearch();
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+    }
 
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(this);
@@ -317,6 +389,46 @@ public class MainActivity extends AppCompatActivity {
             drawer.openDrawer(navigationView);
         }
         return true;
+    }
+
+    public void activateHomeTab() {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            performActivateHomeTab();
+        } else {
+            runOnUiThread(this::performActivateHomeTab);
+        }
+    }
+    
+    private void performActivateHomeTab() {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_content_main);
+        if (!(currentFragment instanceof HomeFragment)) {
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, new HomeFragment())
+                .commit();
+            
+            binding.appBarMain.fab.show();
+            if (recyclerView != null) {
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+            
+            navigationView.setCheckedItem(R.id.nav_home);
+        }
+        
+        refreshMediaList();
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            refreshMediaList();
+            swipeRefreshLayout.setRefreshing(false);
+        });
+        
+        swipeRefreshLayout.setColorSchemeResources(
+            R.color.purple_500,
+            R.color.teal_200,
+            R.color.purple_700
+        );
     }
 }
 

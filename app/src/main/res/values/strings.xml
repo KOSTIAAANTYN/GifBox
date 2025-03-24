@@ -35,6 +35,8 @@
     <string name="settings_overlay_button_desc">Button that appears next to the context menu</string>
     <string name="settings_context_menu_button">System context menu button</string>
     <string name="settings_context_menu_button_desc">Button that appears in the system context menu</string>
+    <string name="settings_translate_button">Translate menu button</string>
+    <string name="settings_translate_button_desc">Button that appears in the system translate menu</string>
     
     <string name="settings_text_processing">Enable text processing</string>
     <string name="settings_text_processing_desc">Process selected text when GifBox button is clicked</string>
@@ -54,6 +56,21 @@
     <string name="error_copying_gif">Error copying GIF: %1$s</string>
     <string name="share_via">Share via</string>
     <string name="error_sharing_file">Error sharing file: %1$s</string>
+    
+    <string name="convert_to_gif">Convert to GIF</string>
+    <string name="convert_video_title">Convert Video to GIF</string>
+    <string name="file_name">File: %1$s</string>
+    <string name="file_info">Duration: %1$s, Size: %2$s, Resolution: %3$dx%4$d</string>
+    <string name="quality_high">High</string>
+    <string name="quality_medium">Medium</string>
+    <string name="quality_low">Low</string>
+    <string name="fps_label">FPS: %1$d</string>
+    <string name="cancel">Cancel</string>
+    <string name="convert">Convert</string>
+    <string name="conversion_progress">Conversion progress: %1$d%%</string>
+    <string name="conversion_complete">Conversion complete</string>
+    <string name="conversion_failed">Conversion failed: %1$s</string>
+    <string name="converting">Converting...</string>
     
     <string-array name="button_types">
         <item>Both buttons</item>
