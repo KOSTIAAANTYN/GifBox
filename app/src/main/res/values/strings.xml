@@ -6,6 +6,38 @@
     <string name="nav_header_subtitle">2</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+    <string name="settings">Settings</string>
+    <string name="action_show_filenames">Show filenames</string>
+    <string name="show_filenames">Show filenames</string>
+    <string name="action_show_extension_icon">Show extension icon</string>
+    <string name="show_extension_icon">Show extension icon</string>
+    <string name="action_flexible_grid">Flexible grid</string>
+    <string name="flexible_grid">Flexible grid</string>
+    <string name="error_copying_gif">Error copying GIF: %s</string>
+    <string name="error_sharing_file">Error sharing file: %s</string>
+    <string name="share_via">Share via</string>
+    <string name="gif_copied">GIF copied to clipboard</string>
+    <string name="only_gif_clipboard">Only GIF files can be copied to clipboard</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_delete">Confirm deletion</string>
+    <string name="confirm_delete_message">Are you sure you want to delete this file?</string>
+    <string name="deletion_failed">Failed to delete file</string>
+    <string name="no_results_found">No results found</string>
+    <string name="clear">Clear</string>
+    <string name="search">Search</string>
+    <string name="search_hint">Search GIFs...</string>
+    <string name="error_playing_video">Error playing video</string>
+
+    <string name="show_recent_files">Recent files</string>
+    <string name="no_recent_files">No recent files</string>
+
+    <string name="sort_settings">Sort settings</string>
+    <string name="sort_by_most_used">Most used</string>
+    <string name="sort_by_date">Creation date</string>
+    <string name="sort_alphabetically">Alphabetically</string>
+    <string name="sort_by_last_used">Last used</string>
+    <string name="no_sort">No sorting</string>
 
     <string name="menu_home">Home</string>
     <string name="menu_settings">Settings</string>
@@ -49,13 +81,7 @@
     <string name="settings_mini_search">Use mini search dialog</string>
     <string name="settings_mini_search_desc">Show mini search dialog instead of direct processing when GifBox button is clicked</string>
     
-    <string name="search_hint">Search GIFs...</string>
     <string name="no_results">No matching GIFs found</string>
-    
-    <string name="gif_copied">GIF copied to clipboard</string>
-    <string name="error_copying_gif">Error copying GIF: %1$s</string>
-    <string name="share_via">Share via</string>
-    <string name="error_sharing_file">Error sharing file: %1$s</string>
     
     <string name="convert_to_gif">Convert to GIF</string>
     <string name="convert_video_title">Convert Video to GIF</string>
@@ -65,7 +91,6 @@
     <string name="quality_medium">Medium</string>
     <string name="quality_low">Low</string>
     <string name="fps_label">FPS: %1$d</string>
-    <string name="cancel">Cancel</string>
     <string name="convert">Convert</string>
     <string name="conversion_progress">Conversion progress: %1$d%%</string>
     <string name="conversion_complete">Conversion complete</string>

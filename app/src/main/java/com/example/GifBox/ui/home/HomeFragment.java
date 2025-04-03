@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.GifBox.MainActivity;
 import com.example.GifBox.R;
@@ -39,6 +40,26 @@ public class HomeFragment extends Fragment {
         clearSearchButton = root.findViewById(R.id.clearSearchButton);
         noResultsTextView = root.findViewById(R.id.noResultsTextView);
         searchHandler = new Handler(Looper.getMainLooper());
+
+        if (getActivity() instanceof MainActivity) {
+            MainActivity activity = (MainActivity) getActivity();
+            RecyclerView recyclerView = activity.findViewById(R.id.recyclerView);
+            if (recyclerView != null) {
+                recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE && searchEditText != null) {
+                            searchEditText.requestFocus();
+                            
+                            
+                            searchEditText.setSelection(searchEditText.getText().length());
+                        }
+                    }
+                });
+            }
+        }
         
         performSearchRunnable = () -> {
             if (isSearching) return;
@@ -53,6 +74,18 @@ public class HomeFragment extends Fragment {
             }
             
             searchHandler.post(() -> {
+                
+                searchEditText.requestFocus();
+                
+                
+                searchEditText.setSelection(searchEditText.getText().length());
+                
+                
+                if (getActivity() != null) {
+                    InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
+                }
+                
                 isSearching = false;
             });
         };
@@ -87,9 +120,6 @@ public class HomeFragment extends Fragment {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || 
                     (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                 
-                InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
-                
                 searchHandler.removeCallbacks(performSearchRunnable);
                 performSearchRunnable.run();
                 
@@ -109,6 +139,11 @@ public class HomeFragment extends Fragment {
             }
             
             searchEditText.requestFocus();
+            
+            if (getActivity() != null) {
+                InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(searchEditText, InputMethodManager.SHOW_IMPLICIT);
+            }
         });
     }
 

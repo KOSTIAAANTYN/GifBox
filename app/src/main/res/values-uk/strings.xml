@@ -7,6 +7,31 @@
     <string name="nav_header_subtitle">2</string>
     <string name="nav_header_desc">Заголовок навігації</string>
     <string name="action_settings">Налаштування</string>
+    <string name="settings">Налаштування</string>
+    <string name="action_show_filenames">Показувати імена файлів</string>
+    <string name="show_filenames">Показувати імена файлів</string>
+    <string name="action_show_extension_icon">Показувати іконку розширення</string>
+    <string name="show_extension_icon">Показувати іконку розширення</string>
+    <string name="action_flexible_grid">Гнучка сітка</string>
+    <string name="flexible_grid">Гнучка сітка</string>
+    <string name="delete">Видалити</string>
+    <string name="confirm_delete">Підтвердження видалення</string>
+    <string name="confirm_delete_message">Ви впевнені, що хочете видалити цей файл?</string>
+    <string name="deletion_failed">Не вдалося видалити файл</string>
+    <string name="no_results_found">Нічого не знайдено</string>
+    <string name="clear">Очистити</string>
+    <string name="search">Пошук</string>
+    <string name="error_playing_video">Помилка відтворення відео</string>
+
+    <string name="show_recent_files">Нещодавні файли</string>
+    <string name="no_recent_files">Немає нещодавніх файлів</string>
+
+    <string name="sort_settings">Налаштування сортування</string>
+    <string name="sort_by_most_used">Найчастіше використовувані</string>
+    <string name="sort_by_date">За датою створення</string>
+    <string name="sort_alphabetically">За алфавітом</string>
+    <string name="sort_by_last_used">За останнім використанням</string>
+    <string name="no_sort">Без сортування</string>
 
     <string name="menu_home">Головна</string>
     <string name="menu_settings">Налаштування</string>
@@ -54,6 +79,7 @@
     <string name="no_results">Не знайдено відповідних GIF</string>
     
     <string name="gif_copied">GIF скопійовано в буфер обміну</string>
+    <string name="only_gif_clipboard">Тільки GIF файли можна копіювати в буфер обміну</string>
     <string name="error_copying_gif">Помилка копіювання GIF: %1$s</string>
     <string name="share_via">Поділитися через</string>
     <string name="error_sharing_file">Помилка поширення файлу: %1$s</string>

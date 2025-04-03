@@ -42,6 +42,8 @@ import android.content.DialogInterface;
 import android.util.Log;
 import com.example.GifBox.MainActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import android.content.SharedPreferences;
+import com.example.GifBox.utils.FileUsageTracker;
 
 public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private static final String TAG = "GifAdapter";
@@ -51,11 +53,37 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private Handler scrollHandler;
     private Runnable scrollRunnable;
     private static final long SCROLL_DELAY = 150;
+    private boolean showFilenames = false;
+    private boolean showExtensionIcon = false;
+    private boolean useFlexibleGrid = false;
 
     public GifAdapter(Context context, List<File> mediaList) {
+        this(context, mediaList, false);
+    }
+    
+    public GifAdapter(Context context, List<File> mediaList, boolean useFlexibleGrid) {
         this.context = context;
         this.mediaList = mediaList;
         this.scrollHandler = new Handler(Looper.getMainLooper());
+        this.scrollRunnable = this::checkVisibleItems;
+        this.useFlexibleGrid = useFlexibleGrid;
+        
+        
+        SharedPreferences preferences = context.getSharedPreferences("GifBoxPrefs", Context.MODE_PRIVATE);
+        this.showFilenames = preferences.getBoolean("show_filenames", false);
+        this.showExtensionIcon = preferences.getBoolean("show_extension_icon", false);
+    }
+
+    public void setShowFilenames(boolean showFilenames) {
+        this.showFilenames = showFilenames;
+    }
+    
+    public void setShowExtensionIcon(boolean showExtensionIcon) {
+        this.showExtensionIcon = showExtensionIcon;
+    }
+    
+    public void setUseFlexibleGrid(boolean useFlexibleGrid) {
+        this.useFlexibleGrid = useFlexibleGrid;
     }
 
     @Override
@@ -85,62 +113,152 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private void checkVisibleItems() {
         if (recyclerView == null) return;
 
-        int firstVisible = ((RecyclerView.LayoutManager) recyclerView.getLayoutManager()).getChildCount();
-        
-        for (int i = 0; i < firstVisible; i++) {
-            View view = recyclerView.getChildAt(i);
-            if (view != null) {
-                ViewHolder holder = (ViewHolder) recyclerView.getChildViewHolder(view);
-                int position = holder.getAdapterPosition();
-                
-                if (position != RecyclerView.NO_POSITION) {
-                    android.graphics.Rect rect = new android.graphics.Rect();
-                    boolean isPartiallyVisible = view.getGlobalVisibleRect(rect);
-                    
-                    if (isPartiallyVisible) {
-                        startMediaPlayback(holder, position);
+        try {
+            int childCount = recyclerView.getChildCount();
+            
+            for (int i = 0; i < childCount; i++) {
+                View view = recyclerView.getChildAt(i);
+                if (view != null) {
+                    ViewHolder holder = (ViewHolder) recyclerView.getChildViewHolder(view);
+                    if (holder != null) {
+                        int position = holder.getAdapterPosition();
+                        
+                        if (position != RecyclerView.NO_POSITION && position < mediaList.size()) {
+                            android.graphics.Rect rect = new android.graphics.Rect();
+                            boolean isVisible = view.getGlobalVisibleRect(rect);
+                            
+                            if (isVisible) {
+                                File file = mediaList.get(position);
+                                String extension = file.getName().substring(file.getName().lastIndexOf(".")).toLowerCase();
+                                
+                                if ((extension.equals(".mp4") || extension.equals(".webm") || extension.equals(".3gp")) && 
+                                    holder.videoView.getVisibility() == View.VISIBLE) {
+                                    
+                                    if (!holder.videoView.isPlaying()) {
+                                        configureVideoView(holder, file);
+                                    }
+                                } else if (extension.equals(".gif") && holder.imageView.getVisibility() == View.VISIBLE) {
+                                    if (holder.imageView.getDrawable() == null) {
+                                        RequestOptions options = new RequestOptions()
+                                            .diskCacheStrategy(DiskCacheStrategy.ALL);
+                                        
+                                        if (useFlexibleGrid) {
+                                            
+                                            options = options.centerCrop();
+                                        } else {
+                                            
+                                            options = options.override(500)
+                                                    .fitCenter();
+                                        }
+                                        
+                                        Glide.with(context)
+                                            .asGif()
+                                            .load(file)
+                                            .apply(options)
+                                            .into(holder.imageView);
+                                    }
+                                }
+                            } else {
+                                
+                                if (holder.videoView.isPlaying()) {
+                                    holder.videoView.pause();
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
-    }
-
-    private void startMediaPlayback(ViewHolder holder, int position) {
-        File file = mediaList.get(position);
-        String extension = file.getName().substring(file.getName().lastIndexOf("."));
-        
-        if ((extension.equals(".mp4") || extension.equals(".webm")) && 
-            holder.videoView.getVisibility() == View.VISIBLE) {
-            if (!holder.videoView.isPlaying()) {
-                holder.videoView.start();
-            }
-        } else if (extension.equals(".gif") && 
-                   holder.imageView.getVisibility() == View.VISIBLE) {
-            if (holder.imageView.getDrawable() == null) {
-                RequestOptions options = new RequestOptions()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(500)
-                    .fitCenter();
-                
-                Glide.with(context)
-                    .asGif()
-                    .load(file)
-                    .apply(options)
-                    .into(holder.imageView);
-            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in checkVisibleItems", e);
         }
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_gif, parent, false);
+        View view;
+        if (useFlexibleGrid) {
+            view = LayoutInflater.from(context).inflate(R.layout.item_gif_flexible, parent, false);
+        } else {
+            view = LayoutInflater.from(context).inflate(R.layout.item_gif, parent, false);
+        }
         return new ViewHolder(view);
+    }
+
+    private void configureVideoView(ViewHolder holder, File file) {
+        try {
+            
+            if (!file.exists() || !file.canRead()) {
+                Log.e(TAG, "Video file does not exist or cannot be read: " + file.getAbsolutePath());
+                return;
+            }
+            
+            
+            holder.videoView.stopPlayback();
+            holder.videoView.setOnPreparedListener(null);
+            holder.videoView.setOnErrorListener(null);
+            
+            
+            Uri videoUri = Uri.fromFile(file);
+            
+            
+            holder.videoView.setOnPreparedListener(mp -> {
+                try {
+                    mp.setVolume(0f, 0f);
+                    mp.setLooping(true);
+                    
+                    
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        mp.setPlaybackParams(mp.getPlaybackParams().setSpeed(1.0f));
+                    }
+                    
+                    
+                    mp.setOnBufferingUpdateListener((mediaPlayer, percent) -> {
+                        if (percent > 5) {
+                            mediaPlayer.start();
+                        }
+                    });
+                    
+                    mp.start();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error in onPrepared", e);
+                }
+            });
+            
+            
+            holder.videoView.setOnErrorListener((mp, what, extra) -> {
+                Log.e(TAG, "VideoView error: what=" + what + ", extra=" + extra);
+                try {
+                    
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        try {
+                            holder.videoView.setVideoURI(videoUri);
+                            holder.videoView.requestFocus();
+                            holder.videoView.start();
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error in error retry", e);
+                        }
+                    }, 500);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error handling error", e);
+                }
+                return true;
+            });
+            
+            
+            holder.videoView.setVideoURI(videoUri);
+            holder.videoView.requestFocus();
+            holder.videoView.start();
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error configuring video view", e);
+        }
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         File file = mediaList.get(position);
-        String extension = file.getName().substring(file.getName().lastIndexOf("."));
+        String fileName = file.getName();
+        String extension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
 
         holder.itemView.setOnLongClickListener(v -> {
             showGifDialog(file);
@@ -150,45 +268,87 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         holder.itemView.setOnClickListener(v -> {
             if (extension.equalsIgnoreCase(".gif")) {
                 copyGifToClipboard(file);
+            } else if (extension.equalsIgnoreCase(".mp4") || extension.equalsIgnoreCase(".webm") || extension.equalsIgnoreCase(".3gp")) {
+                shareFile(file);
             } else {
-                Toast.makeText(context, "Only GIF files can be copied to clipboard", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, context.getString(R.string.only_gif_clipboard), Toast.LENGTH_SHORT).show();
             }
         });
 
-        if (extension.equals(".mp4") || extension.equals(".webm")) {
+        
+        if (showFilenames) {
+            holder.fileNameTextView.setVisibility(View.VISIBLE);
+            String fileNameWithoutExtension = fileName;
+            int dotIndex = fileName.lastIndexOf(".");
+            if (dotIndex > 0) {
+                fileNameWithoutExtension = fileName.substring(0, dotIndex);
+            }
+            holder.fileNameTextView.setText(fileNameWithoutExtension);
+        } else {
+            holder.fileNameTextView.setVisibility(View.GONE);
+        }
+        
+        
+        if (showExtensionIcon) {
+            holder.extensionIconView.setVisibility(View.VISIBLE);
+            if (extension.equals(".gif")) {
+                holder.extensionIconView.setImageResource(R.drawable.ic_extension_gif);
+            } else if (extension.equals(".mp4") || extension.equals(".webm") || extension.equals(".3gp")) {
+                holder.extensionIconView.setImageResource(R.drawable.ic_extension_video);
+            }
+        } else {
+            holder.extensionIconView.setVisibility(View.GONE);
+        }
+
+        if (extension.equals(".mp4") || extension.equals(".webm") || extension.equals(".3gp")) {
             holder.videoView.setVisibility(View.VISIBLE);
             holder.imageView.setVisibility(View.GONE);
 
-            holder.videoView.getLayoutParams().height = 500;
-            holder.videoView.setVideoPath(file.getAbsolutePath());
-            holder.videoView.setOnPreparedListener(mp -> {
-                mp.setVolume(0f, 0f);
-                mp.setLooping(true);
-            });
             
-            View view = holder.itemView;
-            android.graphics.Rect rect = new android.graphics.Rect();
-            if (view.getGlobalVisibleRect(rect)) {
-                holder.videoView.start();
-            }
-        } else {
+            configureVideoView(holder, file);
+            
+        } else if (extension.equals(".gif")) {
             holder.imageView.setVisibility(View.VISIBLE);
             holder.videoView.setVisibility(View.GONE);
             
-            View view = holder.itemView;
-            android.graphics.Rect rect = new android.graphics.Rect();
-            if (view.getGlobalVisibleRect(rect)) {
-                RequestOptions options = new RequestOptions()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(500)
-                    .fitCenter();
+            RequestOptions options = new RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL);
+            
+            if (useFlexibleGrid) {
                 
-                Glide.with(context)
-                    .asGif()
-                    .load(file)
-                    .apply(options)
-                    .into(holder.imageView);
+                options = options.centerCrop();
+            } else {
+                
+                options = options.override(500)
+                        .fitCenter();
             }
+            
+            Glide.with(context)
+                .asGif()
+                .load(file)
+                .apply(options)
+                .into(holder.imageView);
+        } else {
+            
+            holder.imageView.setVisibility(View.VISIBLE);
+            holder.videoView.setVisibility(View.GONE);
+            
+            RequestOptions options = new RequestOptions()
+                .diskCacheStrategy(DiskCacheStrategy.ALL);
+            
+            if (useFlexibleGrid) {
+                
+                options = options.centerCrop();
+            } else {
+                
+                options = options.override(500)
+                        .fitCenter();
+            }
+            
+            Glide.with(context)
+                .load(file)
+                .apply(options)
+                .into(holder.imageView);
         }
     }
 
@@ -232,7 +392,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         View deleteButton = dialog.findViewById(R.id.deleteButton);
         View convertButton = dialog.findViewById(R.id.convertButton);
 
-        boolean isVideo = file.getName().endsWith(".mp4") || file.getName().endsWith(".webm");
+        boolean isVideo = file.getName().endsWith(".mp4") || file.getName().endsWith(".webm") || file.getName().endsWith(".3gp");
         
         if (convertButton != null) {
             if (file.getName().toLowerCase().endsWith(".mp4") ||
@@ -275,6 +435,8 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 mimeType = "video/mp4";
             } else if (file.getName().endsWith(".webm")) {
                 mimeType = "video/webm";
+            } else if (file.getName().endsWith(".3gp")) {
+                mimeType = "video/3gpp";
             } else if (file.getName().endsWith(".gif")) {
                 mimeType = "image/gif";
             } else {
@@ -286,7 +448,10 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             
-            context.startActivity(Intent.createChooser(shareIntent, "Share via"));
+            
+            FileUsageTracker.trackFileUsage(context, file);
+            
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_via)));
         });
 
         renameButton.setOnClickListener(v -> {
@@ -450,6 +615,9 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             ClipData clip = ClipData.newUri(context.getContentResolver(), "GIF", contentUri);
             clipboard.setPrimaryClip(clip);
 
+            
+            FileUsageTracker.trackFileUsage(context, file);
+
             Toast.makeText(context, "GIF copied to clipboard", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             e.printStackTrace();
@@ -465,11 +633,15 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         VideoView videoView;
+        TextView fileNameTextView;
+        ImageView extensionIconView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
             videoView = itemView.findViewById(R.id.videoView);
+            fileNameTextView = itemView.findViewById(R.id.fileNameTextView);
+            extensionIconView = itemView.findViewById(R.id.extensionIconView);
         }
     }
 
@@ -552,6 +724,39 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 return tag;
             }
         });
+    }
+
+    private void shareFile(File file) {
+        try {
+            Uri contentUri = FileProvider.getUriForFile(context,
+                context.getApplicationContext().getPackageName() + ".provider",
+                file);
+                
+            String mimeType;
+            if (file.getName().endsWith(".mp4")) {
+                mimeType = "video/mp4";
+            } else if (file.getName().endsWith(".webm")) {
+                mimeType = "video/webm";
+            } else if (file.getName().endsWith(".3gp")) {
+                mimeType = "video/3gpp";
+            } else if (file.getName().endsWith(".gif")) {
+                mimeType = "image/gif";
+            } else {
+                mimeType = "*/*";
+            }
+            
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType(mimeType);
+            shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            
+            
+            FileUsageTracker.trackFileUsage(context, file);
+            
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_via)));
+        } catch (Exception e) {
+            Toast.makeText(context, context.getString(R.string.error_sharing_file, e.getMessage()), Toast.LENGTH_SHORT).show();
+        }
     }
 }
 
