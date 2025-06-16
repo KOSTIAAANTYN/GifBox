@@ -608,7 +608,7 @@ public class MainActivity extends AppCompatActivity
         
         swipeRefreshLayout.setColorSchemeResources(
             R.color.purple_500,
-            R.color.teal_200,
+            R.color.purple_200,
             R.color.purple_700
         );
     }

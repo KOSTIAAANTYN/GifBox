@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/purple_200">
+    android:background="@drawable/gradient">
 
     <TextView
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:text="Cancel"
             android:background="?android:attr/selectableItemBackground"
-            android:textColor="@android:color/white"
+            android:textColor="#E60C0C"
             android:layout_marginEnd="8dp"/>
 
         <Button
@@ -46,6 +46,6 @@
             android:layout_height="wrap_content"
             android:text="Save"
             android:background="?android:attr/selectableItemBackground"
-            android:textColor="@android:color/white"/>
+            android:textColor="#90EE90"/>
     </LinearLayout>
 </LinearLayout> 
