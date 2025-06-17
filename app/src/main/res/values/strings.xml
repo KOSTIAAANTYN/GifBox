@@ -107,4 +107,28 @@
         <item>Direct text processing</item>
         <item>Mini search dialog</item>
     </string-array>
+
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_desc">Виберіть темну або світлу тему для додатку</string>
+    <string name="settings_theme_system">Системна (за замовчуванням)</string>
+    <string name="settings_theme_light">Світла</string>
+    <string name="settings_theme_dark">Темна</string>
+    
+    <string name="settings_language">Мова</string>
+    <string name="settings_language_desc">Виберіть мову інтерфейсу</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_ukrainian">Українська</string>
+    <string name="action_sort_settings">Sorting</string>
+    <string name="action_show_recent_files">Show recent files</string>
+    <string name="create" >Create</string>
+    <string name="upload_a_GIF" >Upload a GIF</string>
+    <string name="coming_soon" >Coming soon...</string>
+    <string name="action_sort_by_most_used">By usage frequency</string>
+    <string name="action_sort_by_date">By date</string>
+    <string name="action_sort_alphabetically">Alphabetically</string>
+    <string name="action_sort_by_last_used">By last used</string>
+    <string name="action_no_sort">No sorting</string>
+    <string name="Change_the_name" >Change the name</string>
+    <string name="Enter_a_new_name" >Enter a new name</string>
+    <string name="Save" >Save</string>
 </resources>

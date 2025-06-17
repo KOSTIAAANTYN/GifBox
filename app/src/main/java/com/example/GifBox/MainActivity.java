@@ -60,6 +60,10 @@ import java.util.List;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import androidx.appcompat.app.AppCompatDelegate;
+import android.content.res.Configuration;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
@@ -84,6 +88,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applyThemeAndLanguage();
+        
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -115,6 +121,41 @@ public class MainActivity extends AppCompatActivity
         loadMedia();
         
         updateTextProcessingComponentState();
+    }
+
+    private void applyThemeAndLanguage() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        int appTheme = sharedPreferences.getInt(SettingsFragment.KEY_APP_THEME, SettingsFragment.THEME_SYSTEM);
+        int appLanguage = sharedPreferences.getInt(SettingsFragment.KEY_APP_LANGUAGE, SettingsFragment.LANGUAGE_ENGLISH);
+
+        switch (appTheme) {
+            case SettingsFragment.THEME_LIGHT:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case SettingsFragment.THEME_DARK:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            case SettingsFragment.THEME_SYSTEM:
+            default:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+        }
+
+        Locale locale;
+        switch (appLanguage) {
+            case SettingsFragment.LANGUAGE_UKRAINIAN:
+                locale = new Locale("uk");
+                break;
+            case SettingsFragment.LANGUAGE_ENGLISH:
+            default:
+                locale = new Locale("en");
+                break;
+        }
+        
+        Locale.setDefault(locale);
+        Configuration config = getResources().getConfiguration();
+        config.locale = locale;
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
     }
     
     private void initializeDefaultSettings() {

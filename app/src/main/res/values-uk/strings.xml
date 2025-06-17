@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GifBox</string>
-    <string name="navigation_drawer_open">Відкрити панель навігації</string>
-    <string name="navigation_drawer_close">Закрити панель навігації</string>
+    <string name="navigation_drawer_open">Відкрити навігаційне меню</string>
+    <string name="navigation_drawer_close">Закрити навігаційне меню</string>
     <string name="nav_header_title">1</string>
     <string name="nav_header_subtitle">2</string>
     <string name="nav_header_desc">Заголовок навігації</string>
     <string name="action_settings">Налаштування</string>
     <string name="settings">Налаштування</string>
-    <string name="action_show_filenames">Показувати імена файлів</string>
+    <string name="action_show_filenames">Показати імена файлів</string>
     <string name="show_filenames">Показувати імена файлів</string>
-    <string name="action_show_extension_icon">Показувати іконку розширення</string>
+    <string name="action_show_extension_icon">Показати іконки розширення</string>
     <string name="show_extension_icon">Показувати іконку розширення</string>
     <string name="action_flexible_grid">Гнучка сітка</string>
     <string name="flexible_grid">Гнучка сітка</string>
@@ -23,16 +23,17 @@
     <string name="search">Пошук</string>
     <string name="error_playing_video">Помилка відтворення відео</string>
 
-    <string name="show_recent_files">Нещодавні файли</string>
+    <string name="show_recent_files">Показати нещодавні файли</string>
     <string name="no_recent_files">Немає нещодавніх файлів</string>
 
-    <string name="sort_settings">Налаштування сортування</string>
-    <string name="sort_by_most_used">Найчастіше використовувані</string>
-    <string name="sort_by_date">За датою створення</string>
-    <string name="sort_alphabetically">За алфавітом</string>
-    <string name="sort_by_last_used">За останнім використанням</string>
-    <string name="no_sort">Без сортування</string>
+    <string name="action_sort_settings">Сортування</string>
+    <string name="action_sort_by_most_used">За частотою використання</string>
+    <string name="action_sort_by_date">За датою</string>
+    <string name="action_sort_alphabetically">За алфавітом</string>
+    <string name="action_sort_by_last_used">За останнім використанням</string>
+    <string name="action_no_sort">Без сортування</string>
 
+    <string name="no_sort">Без сортування</string>
     <string name="menu_home">Головна</string>
     <string name="menu_settings">Налаштування</string>
 
@@ -54,20 +55,20 @@
     
     <string name="settings_button_type">Тип кнопки</string>
     <string name="settings_button_type_desc">Виберіть, який тип кнопки використовувати при виділенні тексту</string>
-    <string name="settings_button_function">Функція кнопки:</string>
-    <string name="settings_enable_button">Увімкнути кнопку:</string>
+    <string name="settings_button_function">Функція:</string>
+    <string name="settings_enable_button">Увімкнути:</string>
     
-    <string name="settings_overlay_button">Кнопка накладання</string>
-    <string name="settings_overlay_button_desc">Кнопка, яка з\'являється поруч з контекстним меню</string>
-    <string name="settings_context_menu_button">Кнопка у системному контекстному меню</string>
-    <string name="settings_context_menu_button_desc">Кнопка, яка з\'являється у системному контекстному меню</string>
-    <string name="settings_translate_button">Кнопка у меню перекладу</string>
-    <string name="settings_translate_button_desc">Кнопка, яка з\'являється у системному меню перекладу</string>
+    <string name="settings_overlay_button">Плаваюча кнопка</string>
+    <string name="settings_overlay_button_desc">Показує плаваючу кнопку для швидкого доступу</string>
+    <string name="settings_context_menu_button">Кнопка контекстного меню</string>
+    <string name="settings_context_menu_button_desc">Додає опцію до контекстного меню тексту</string>
+    <string name="settings_translate_button">Кнопка перекладу</string>
+    <string name="settings_translate_button_desc">Додає кнопку перекладу до виділеного тексту</string>
     
     <string name="settings_text_processing">Увімкнути обробку тексту</string>
     <string name="settings_text_processing_desc">Обробляти виділений текст при натисканні на кнопку GifBox</string>
-    <string name="settings_accessibility">Налаштування спеціальних можливостей</string>
-    <string name="settings_accessibility_desc">Відкрити налаштування спеціальних можливостей Android</string>
+    <string name="settings_accessibility">Доступність</string>
+    <string name="settings_accessibility_desc">Налаштуйте службу спеціальних можливостей для роботи з додатком</string>
     <string name="settings_save">Зберегти налаштування</string>
     <string name="settings_saved">Налаштування збережено</string>
     <string name="text_processing_disabled">Обробку тексту вимкнено в налаштуваннях</string>
@@ -79,10 +80,10 @@
     <string name="no_results">Не знайдено відповідних GIF</string>
     
     <string name="gif_copied">GIF скопійовано в буфер обміну</string>
-    <string name="only_gif_clipboard">Тільки GIF файли можна копіювати в буфер обміну</string>
+    <string name="only_gif_clipboard">Тільки GIF файли можна копіювати до буферу обміну!</string>
     <string name="error_copying_gif">Помилка копіювання GIF: %1$s</string>
-    <string name="share_via">Поділитися через</string>
-    <string name="error_sharing_file">Помилка поширення файлу: %1$s</string>
+    <string name="share_via">Поділитися через…</string>
+    <string name="error_sharing_file">Помилка при поділенні файлом: %s</string>
     
     <string name="convert_to_gif">Конвертувати в GIF</string>
     <string name="convert_video_title">Конвертувати відео у GIF</string>
@@ -94,10 +95,10 @@
     <string name="fps_label">Кадрів/с: %1$d</string>
     <string name="cancel">Скасувати</string>
     <string name="convert">Конвертувати</string>
-    <string name="conversion_progress">Прогрес конвертації: %1$d%%</string>
-    <string name="conversion_complete">Конвертацію завершено</string>
-    <string name="conversion_failed">Помилка конвертації: %1$s</string>
-    <string name="converting">Конвертація...</string>
+    <string name="conversion_progress">Прогрес: %d%%</string>
+    <string name="conversion_complete">Конвертація завершена</string>
+    <string name="conversion_failed">Помилка конвертації: %s</string>
+    <string name="converting">Конвертація</string>
     
     <string-array name="button_types">
         <item>Обидві кнопки</item>
@@ -109,4 +110,27 @@
         <item>Пряма обробка тексту</item>
         <item>Міні-пошук</item>
     </string-array>
+
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_desc">Виберіть темну або світлу тему для додатку</string>
+    <string name="settings_theme_system">Системна (за замовчуванням)</string>
+    <string name="settings_theme_light">Світла</string>
+    <string name="settings_theme_dark">Темна</string>
+    
+    <string name="settings_language">Мова</string>
+    <string name="settings_language_desc">Виберіть мову інтерфейсу</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_ukrainian">Українська</string>
+    <string name="sort_settings">Налаштування сортування</string>
+    <string name="sort_by_most_used">Найчастіше використовувані</string>
+    <string name="sort_by_date">Дата створення</string>
+    <string name="sort_alphabetically">За алфавітом</string>
+    <string name="sort_by_last_used">Останнє використання</string>
+    <string name="action_show_recent_files">Показати останні файли</string>
+    <string name="create" >Створити</string>
+    <string name="upload_a_GIF" >Завантажити GIF-файл</string>
+    <string name="coming_soon" >Скоро...</string>
+    <string name="Change_the_name" >Змінити назву</string>
+    <string name="Enter_a_new_name" >Введіть нове ім\'я</string>
+    <string name="Save" >Зберегти</string>
 </resources> 

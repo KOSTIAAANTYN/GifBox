@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
@@ -16,10 +17,14 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.GifBox.R;
+
+import java.util.Locale;
 
 public class SettingsFragment extends Fragment {
 
@@ -30,10 +35,19 @@ public class SettingsFragment extends Fragment {
     public static final String KEY_OVERLAY_FUNCTION = "overlay_function";
     public static final String KEY_CONTEXT_MENU_FUNCTION = "context_menu_function";
     public static final String KEY_TRANSLATE_FUNCTION = "translate_function";
+    public static final String KEY_APP_THEME = "app_theme";
+    public static final String KEY_APP_LANGUAGE = "app_language";
     
 
     public static final int FUNCTION_DIRECT_PROCESSING = 0;
     public static final int FUNCTION_MINI_SEARCH = 1;
+
+    public static final int THEME_SYSTEM = 0;
+    public static final int THEME_LIGHT = 1;
+    public static final int THEME_DARK = 2;
+
+    public static final int LANGUAGE_ENGLISH = 0;
+    public static final int LANGUAGE_UKRAINIAN = 1;
 
     private SwitchCompat switchOverlay;
     private SwitchCompat switchContextMenu;
@@ -41,6 +55,8 @@ public class SettingsFragment extends Fragment {
     private Spinner spinnerOverlayFunction;
     private Spinner spinnerContextMenuFunction;
     private Spinner spinnerTranslateFunction;
+    private Spinner spinnerTheme;
+    private Spinner spinnerLanguage;
     private Button buttonAccessibility;
     private Button buttonSave;
     private SharedPreferences sharedPreferences;
@@ -57,6 +73,8 @@ public class SettingsFragment extends Fragment {
         spinnerOverlayFunction = root.findViewById(R.id.spinnerOverlayFunction);
         spinnerContextMenuFunction = root.findViewById(R.id.spinnerContextMenuFunction);
         spinnerTranslateFunction = root.findViewById(R.id.spinnerTranslateFunction);
+        spinnerTheme = root.findViewById(R.id.spinnerTheme);
+        spinnerLanguage = root.findViewById(R.id.spinnerLanguage);
         buttonAccessibility = root.findViewById(R.id.buttonAccessibility);
         buttonSave = root.findViewById(R.id.buttonSave);
 
@@ -91,6 +109,22 @@ public class SettingsFragment extends Fragment {
         );
         translateFunctionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerTranslateFunction.setAdapter(translateFunctionAdapter);
+
+        ArrayAdapter<CharSequence> themeAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.theme_options,
+            android.R.layout.simple_spinner_item
+        );
+        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTheme.setAdapter(themeAdapter);
+
+        ArrayAdapter<CharSequence> languageAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.language_options,
+            android.R.layout.simple_spinner_item
+        );
+        languageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerLanguage.setAdapter(languageAdapter);
     }
 
     private void loadSettings() {
@@ -100,6 +134,8 @@ public class SettingsFragment extends Fragment {
         int overlayFunction = sharedPreferences.getInt(KEY_OVERLAY_FUNCTION, FUNCTION_DIRECT_PROCESSING);
         int contextMenuFunction = sharedPreferences.getInt(KEY_CONTEXT_MENU_FUNCTION, FUNCTION_MINI_SEARCH);
         int translateFunction = sharedPreferences.getInt(KEY_TRANSLATE_FUNCTION, FUNCTION_MINI_SEARCH);
+        int appTheme = sharedPreferences.getInt(KEY_APP_THEME, THEME_SYSTEM);
+        int appLanguage = sharedPreferences.getInt(KEY_APP_LANGUAGE, LANGUAGE_ENGLISH);
 
         switchOverlay.setChecked(overlayEnabled);
         switchContextMenu.setChecked(contextMenuEnabled);
@@ -107,6 +143,8 @@ public class SettingsFragment extends Fragment {
         spinnerOverlayFunction.setSelection(overlayFunction);
         spinnerContextMenuFunction.setSelection(contextMenuFunction);
         spinnerTranslateFunction.setSelection(translateFunction);
+        spinnerTheme.setSelection(appTheme);
+        spinnerLanguage.setSelection(appLanguage);
     }
 
     private void setupListeners() {
@@ -126,6 +164,13 @@ public class SettingsFragment extends Fragment {
         int overlayFunction = spinnerOverlayFunction.getSelectedItemPosition();
         int contextMenuFunction = spinnerContextMenuFunction.getSelectedItemPosition();
         int translateFunction = spinnerTranslateFunction.getSelectedItemPosition();
+        int appTheme = spinnerTheme.getSelectedItemPosition();
+        int appLanguage = spinnerLanguage.getSelectedItemPosition();
+
+        int oldAppTheme = sharedPreferences.getInt(KEY_APP_THEME, THEME_SYSTEM);
+        int oldAppLanguage = sharedPreferences.getInt(KEY_APP_LANGUAGE, LANGUAGE_ENGLISH);
+        boolean themeChanged = oldAppTheme != appTheme;
+        boolean languageChanged = oldAppLanguage != appLanguage;
         
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY_OVERLAY_ENABLED, overlayEnabled);
@@ -134,6 +179,8 @@ public class SettingsFragment extends Fragment {
         editor.putInt(KEY_OVERLAY_FUNCTION, overlayFunction);
         editor.putInt(KEY_CONTEXT_MENU_FUNCTION, contextMenuFunction);
         editor.putInt(KEY_TRANSLATE_FUNCTION, translateFunction);
+        editor.putInt(KEY_APP_THEME, appTheme);
+        editor.putInt(KEY_APP_LANGUAGE, appLanguage);
         editor.apply();
 
         PackageManager pm = requireActivity().getPackageManager();
@@ -161,5 +208,49 @@ public class SettingsFragment extends Fragment {
         );
 
         Toast.makeText(requireContext(), R.string.settings_saved, Toast.LENGTH_SHORT).show();
+
+        if (themeChanged) {
+            applyTheme(appTheme);
+        }
+        
+        if (languageChanged) {
+            applyLanguage(appLanguage);
+
+            requireActivity().recreate();
+        }
+    }
+
+    private void applyTheme(int themeMode) {
+        switch (themeMode) {
+            case THEME_LIGHT:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case THEME_DARK:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            case THEME_SYSTEM:
+            default:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+        }
+    }
+
+    private void applyLanguage(int languageCode) {
+        Locale locale;
+        switch (languageCode) {
+            case LANGUAGE_UKRAINIAN:
+                locale = new Locale("uk");
+                break;
+            case LANGUAGE_ENGLISH:
+            default:
+                locale = new Locale("en");
+                break;
+        }
+        
+        Locale.setDefault(locale);
+        Configuration config = new Configuration();
+        config.locale = locale;
+        requireActivity().getResources().updateConfiguration(config, 
+                requireActivity().getResources().getDisplayMetrics());
     }
 } 

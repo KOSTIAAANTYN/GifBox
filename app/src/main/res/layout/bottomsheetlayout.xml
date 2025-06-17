@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAlignment="viewStart"
-            android:text="Create"
+            android:text="@string/create"
             android:padding="8dp"
             android:textColor="@color/purple_200"
             android:layout_marginStart="12dp"
@@ -56,7 +56,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upload a GIF"
+            android:text="@string/upload_a_GIF"
             android:textColor="@color/purple_200"
             android:layout_marginLeft="30dp"
             android:textSize="16sp"/>
@@ -83,7 +83,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Coming soon..."
+            android:text="@string/coming_soon"
             android:textColor="@color/purple_200"
             android:layout_marginLeft="30dp"
             android:textSize="16sp"/>
