@@ -56,6 +56,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     private boolean showFilenames = false;
     private boolean showExtensionIcon = false;
     private boolean useFlexibleGrid = false;
+    private boolean optimizedMode = false;
 
     public GifAdapter(Context context, List<File> mediaList) {
         this(context, mediaList, false);
@@ -72,6 +73,7 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
         SharedPreferences preferences = context.getSharedPreferences("GifBoxPrefs", Context.MODE_PRIVATE);
         this.showFilenames = preferences.getBoolean("show_filenames", false);
         this.showExtensionIcon = preferences.getBoolean("show_extension_icon", false);
+        this.optimizedMode = preferences.getBoolean("optimized_mode", false);
     }
 
     public void setShowFilenames(boolean showFilenames) {
@@ -80,6 +82,10 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
     
     public void setShowExtensionIcon(boolean showExtensionIcon) {
         this.showExtensionIcon = showExtensionIcon;
+    }
+    
+    public void setOptimizedMode(boolean optimizedMode) {
+        this.optimizedMode = optimizedMode;
     }
     
     public void setUseFlexibleGrid(boolean useFlexibleGrid) {
@@ -134,7 +140,11 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                                 if ((extension.equals(".mp4") || extension.equals(".webm") || extension.equals(".3gp")) && 
                                     holder.videoView.getVisibility() == View.VISIBLE) {
                                     
-                                    if (!holder.videoView.isPlaying()) {
+                                    if (optimizedMode) {
+                                        if (holder.videoView.isPlaying()) {
+                                            holder.videoView.pause();
+                                        }
+                                    } else if (!holder.videoView.isPlaying()) {
                                         configureVideoView(holder, file);
                                     }
                                 } else if (extension.equals(".gif") && holder.imageView.getVisibility() == View.VISIBLE) {
@@ -143,10 +153,8 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                                             .diskCacheStrategy(DiskCacheStrategy.ALL);
                                         
                                         if (useFlexibleGrid) {
-                                            
                                             options = options.centerCrop();
                                         } else {
-                                            
                                             options = options.override(500)
                                                     .fitCenter();
                                         }
@@ -159,7 +167,6 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                                     }
                                 }
                             } else {
-                                
                                 if (holder.videoView.isPlaying()) {
                                     holder.videoView.pause();
                                 }
@@ -304,8 +311,11 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
             holder.videoView.setVisibility(View.VISIBLE);
             holder.imageView.setVisibility(View.GONE);
 
-            
-            configureVideoView(holder, file);
+            if (optimizedMode) {
+                setupVideoThumbnail(holder, file);
+            } else {
+                configureVideoView(holder, file);
+            }
             
         } else if (extension.equals(".gif")) {
             holder.imageView.setVisibility(View.VISIBLE);
@@ -315,10 +325,8 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 .diskCacheStrategy(DiskCacheStrategy.ALL);
             
             if (useFlexibleGrid) {
-                
                 options = options.centerCrop();
             } else {
-                
                 options = options.override(500)
                         .fitCenter();
             }
@@ -329,7 +337,6 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 .apply(options)
                 .into(holder.imageView);
         } else {
-            
             holder.imageView.setVisibility(View.VISIBLE);
             holder.videoView.setVisibility(View.GONE);
             
@@ -337,10 +344,8 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 .diskCacheStrategy(DiskCacheStrategy.ALL);
             
             if (useFlexibleGrid) {
-                
                 options = options.centerCrop();
             } else {
-                
                 options = options.override(500)
                         .fitCenter();
             }
@@ -350,6 +355,15 @@ public class GifAdapter extends RecyclerView.Adapter<GifAdapter.ViewHolder> {
                 .apply(options)
                 .into(holder.imageView);
         }
+    }
+
+    private void setupVideoThumbnail(ViewHolder holder, File file) {
+        Uri videoUri = Uri.fromFile(file);
+        holder.videoView.setOnPreparedListener(mp -> {
+            mp.setVolume(0f, 0f);
+        });
+        holder.videoView.setVideoURI(videoUri);
+        holder.videoView.seekTo(1);
     }
 
     @Override

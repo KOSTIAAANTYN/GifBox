@@ -85,6 +85,8 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFS_NAME = "GifBoxPrefs";
     private static final String KEY_TEXT_PROCESSING_ENABLED = "text_processing_enabled";
     private static final String KEY_SHOW_RECENT_FILES = "show_recent_files";
+    private static final String KEY_OPTIMIZED_MODE = "optimized_mode";
+    private boolean optimizedMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +98,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(binding.getRoot());
         
         initializeDefaultSettings();
+        
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        optimizedMode = preferences.getBoolean(KEY_OPTIMIZED_MODE, false);
 
         recyclerView = findViewById(R.id.recyclerView);
         setupRecyclerViewLayout();
@@ -170,6 +175,7 @@ public class MainActivity extends AppCompatActivity
             editor.putInt(SettingsFragment.KEY_TRANSLATE_FUNCTION, SettingsFragment.FUNCTION_MINI_SEARCH);
             editor.putBoolean(KEY_TEXT_PROCESSING_ENABLED, false);
             editor.putBoolean(KEY_SHOW_RECENT_FILES, false);
+            editor.putBoolean(KEY_OPTIMIZED_MODE, false);
             editor.apply();
             
             updateTextProcessingComponentState();
@@ -366,7 +372,7 @@ public class MainActivity extends AppCompatActivity
     }
     
     public void refreshMediaList() {
-                RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
         int scrollPosition = 0;
         
         if (layoutManager != null) {
@@ -379,18 +385,20 @@ public class MainActivity extends AppCompatActivity
             }
         }
         
-                loadMedia();
+        loadMedia();
         
-                if (adapter != null) {
+        if (adapter != null) {
             SharedPreferences preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             boolean showFilenames = preferences.getBoolean("show_filenames", false);
             boolean showExtensionIcon = preferences.getBoolean("show_extension_icon", false);
+            optimizedMode = preferences.getBoolean(KEY_OPTIMIZED_MODE, false);
             
             adapter.setShowFilenames(showFilenames);
             adapter.setShowExtensionIcon(showExtensionIcon);
+            adapter.setOptimizedMode(optimizedMode);
             adapter.notifyDataSetChanged();
             
-                        if (layoutManager != null && scrollPosition >= 0 && scrollPosition < adapter.getItemCount()) {
+            if (layoutManager != null && scrollPosition >= 0 && scrollPosition < adapter.getItemCount()) {
                 layoutManager.scrollToPosition(scrollPosition);
             }
         }
@@ -481,24 +489,27 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         
-                SharedPreferences preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean showFilenames = preferences.getBoolean("show_filenames", false);
         boolean showExtensionIcon = preferences.getBoolean("show_extension_icon", false);
         boolean useFlexibleGrid = preferences.getBoolean("use_flexible_grid", false);
         boolean showRecentFiles = preferences.getBoolean("show_recent_files", false);
+        boolean optimizedMode = preferences.getBoolean(KEY_OPTIMIZED_MODE, false);
         int sortType = preferences.getInt("sort_type", FileUsageTracker.SORT_NONE);
         
         MenuItem filenamesItem = menu.findItem(R.id.action_show_filenames);
         MenuItem extensionIconItem = menu.findItem(R.id.action_show_extension_icon);
         MenuItem flexibleGridItem = menu.findItem(R.id.action_flexible_grid);
         MenuItem recentFilesItem = menu.findItem(R.id.action_show_recent_files);
+        MenuItem optimizedModeItem = menu.findItem(R.id.action_optimized_mode);
         
         filenamesItem.setChecked(showFilenames);
         extensionIconItem.setChecked(showExtensionIcon);
         flexibleGridItem.setChecked(useFlexibleGrid);
         recentFilesItem.setChecked(showRecentFiles);
+        optimizedModeItem.setChecked(optimizedMode);
         
-                updateSortMenuCheckedState(menu, sortType);
+        updateSortMenuCheckedState(menu, sortType);
         
         return true;
     }
@@ -566,17 +577,25 @@ public class MainActivity extends AppCompatActivity
             editor.putBoolean("use_flexible_grid", useFlexibleGrid);
             editor.apply();
             
-                        setupRecyclerViewLayout();
+            setupRecyclerViewLayout();
             return true;
         }
         else if (itemId == R.id.action_show_recent_files) {
-                        boolean showRecentFiles = !item.isChecked();
+            boolean showRecentFiles = !item.isChecked();
             item.setChecked(showRecentFiles);
             toggleRecentFilesMode(showRecentFiles);
             return true;
         }
+        else if (itemId == R.id.action_optimized_mode) {
+            optimizedMode = !item.isChecked();
+            item.setChecked(optimizedMode);
+            editor.putBoolean(KEY_OPTIMIZED_MODE, optimizedMode);
+            editor.apply();
+            refreshMediaList();
+            return true;
+        }
         else if (itemId == R.id.action_sort_by_most_used) {
-                        item.setChecked(true);
+            item.setChecked(true);
             setSortType(FileUsageTracker.SORT_MOST_USED);
             return true;
         }

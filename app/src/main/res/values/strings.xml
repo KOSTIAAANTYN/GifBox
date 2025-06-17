@@ -131,4 +131,5 @@
     <string name="Change_the_name" >Change the name</string>
     <string name="Enter_a_new_name" >Enter a new name</string>
     <string name="Save" >Save</string>
+    <string name="action_optimized_mode">Optimized mode</string>
 </resources>
