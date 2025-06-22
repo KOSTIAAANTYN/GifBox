@@ -134,4 +134,6 @@
     <string name="Enter_a_new_name" >Введіть нове ім\'я</string>
     <string name="Save" >Зберегти</string>
     <string name="action_optimized_mode">Оптимізований режим</string>
+    <string name="download">Завантажити</string>
+    <string name="search_online_gifs">Пошук GIF онлайн</string>
 </resources> 

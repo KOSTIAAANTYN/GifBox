@@ -12,10 +12,8 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,6 +36,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.example.GifBox.TenorGif.TenorSearchFragment;
 import com.example.GifBox.buttons.ContextButton;
 import com.example.GifBox.buttons.TranslateOption;
 import com.example.GifBox.utils.FileUsageTracker;
@@ -55,7 +54,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -67,7 +65,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
-    private ActivityMainBinding binding;
+    public ActivityMainBinding binding;
     private static final int REQUEST_CODE_PICK_FILES = 1;
     private RecyclerView recyclerView;
     private GifAdapter adapter;
@@ -404,12 +402,13 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void showBottomDialog() {
+    public void showBottomDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.bottomsheetlayout);
 
         LinearLayout fileLayout = dialog.findViewById(R.id.layoutGIF);
+        LinearLayout searchOnlineLayout = dialog.findViewById(R.id.layoutCrFolder);
         ImageView cancelButton = dialog.findViewById(R.id.cancelButton);
 
         fileLayout.setOnClickListener(v -> {
@@ -421,6 +420,14 @@ public class MainActivity extends AppCompatActivity
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             startActivityForResult(intent, REQUEST_CODE_PICK_FILES);
+        });
+
+        searchOnlineLayout.setOnClickListener(v -> {
+            dialog.dismiss();
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.nav_host_fragment_content_main, TenorSearchFragment.newInstance())
+                .addToBackStack(null)
+                .commit();
         });
 
         cancelButton.setOnClickListener(view -> dialog.dismiss());

@@ -132,4 +132,6 @@
     <string name="Enter_a_new_name" >Enter a new name</string>
     <string name="Save" >Save</string>
     <string name="action_optimized_mode">Optimized mode</string>
+    <string name="download">Download</string>
+    <string name="search_online_gifs">Search online GIFs</string>
 </resources>

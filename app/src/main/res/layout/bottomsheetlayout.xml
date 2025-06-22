@@ -70,22 +70,20 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="30dp">
+        android:layout_marginTop="10dp"
+        android:padding="10dp">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/baseline_create_new_folder_24"/>
+            android:src="@android:drawable/ic_menu_search"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/coming_soon"
+            android:text="@string/search_online_gifs"
             android:textColor="@color/purple_200"
-            android:layout_marginLeft="30dp"
+            android:layout_marginLeft="20dp"
             android:textSize="16sp"/>
 
     </LinearLayout>
